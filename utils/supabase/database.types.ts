@@ -60,6 +60,109 @@ export type Database = {
         }
         Relationships: []
       }
+      order_items: {
+        Row: {
+          base_price: number
+          created_at: string | null
+          customization_details: Json | null
+          customization_fee: number | null
+          id: string
+          item_total: number
+          order_id: string | null
+          product_id: number | null
+          quantity: number | null
+        }
+        Insert: {
+          base_price: number
+          created_at?: string | null
+          customization_details?: Json | null
+          customization_fee?: number | null
+          id?: string
+          item_total: number
+          order_id?: string | null
+          product_id?: number | null
+          quantity?: number | null
+        }
+        Update: {
+          base_price?: number
+          created_at?: string | null
+          customization_details?: Json | null
+          customization_fee?: number | null
+          id?: string
+          item_total?: number
+          order_id?: string | null
+          product_id?: number | null
+          quantity?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders_with_user_details"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders: {
+        Row: {
+          completed_at: string | null
+          confirmed_at: string | null
+          created_at: string | null
+          delivered_at: string | null
+          feasibility_notes: string | null
+          id: string
+          notes: string | null
+          production_notes: string | null
+          ready_at: string | null
+          status: string | null
+          total_amount: number
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          confirmed_at?: string | null
+          created_at?: string | null
+          delivered_at?: string | null
+          feasibility_notes?: string | null
+          id?: string
+          notes?: string | null
+          production_notes?: string | null
+          ready_at?: string | null
+          status?: string | null
+          total_amount: number
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          confirmed_at?: string | null
+          created_at?: string | null
+          delivered_at?: string | null
+          feasibility_notes?: string | null
+          id?: string
+          notes?: string | null
+          production_notes?: string | null
+          ready_at?: string | null
+          status?: string | null
+          total_amount?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       products: {
         Row: {
           brandID: number | null
@@ -114,9 +217,83 @@ export type Database = {
           },
         ]
       }
+      profiles: {
+        Row: {
+          address: Json | null
+          created_at: string | null
+          full_name: string | null
+          id: string
+          phone: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          address?: Json | null
+          created_at?: string | null
+          full_name?: string | null
+          id: string
+          phone?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          address?: Json | null
+          created_at?: string | null
+          full_name?: string | null
+          id?: string
+          phone?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      shopping_bags: {
+        Row: {
+          created_at: string | null
+          id: string
+          product_id: string
+          quantity: number
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          product_id: string
+          quantity?: number
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          product_id?: string
+          quantity?: number
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
-      [_ in never]: never
+      orders_with_user_details: {
+        Row: {
+          completed_at: string | null
+          confirmed_at: string | null
+          created_at: string | null
+          customer_address: Json | null
+          customer_email: string | null
+          customer_name: string | null
+          customer_phone: string | null
+          delivered_at: string | null
+          feasibility_notes: string | null
+          id: string | null
+          notes: string | null
+          production_notes: string | null
+          ready_at: string | null
+          status: string | null
+          total_amount: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       [_ in never]: never
