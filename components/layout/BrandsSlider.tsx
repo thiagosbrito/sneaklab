@@ -49,7 +49,15 @@ export default function BrandsSlider() {
     }, [rowWidth, controls]);
 
     return (
-        <div className="overflow-hidden w-full py-4 bg-black">
+        <div className="overflow-hidden w-full py-4 bg-black space-y-6">
+            <div className="container">
+                <div className="flex flex-col gap-y-6">
+                    <h1 className='text-4xl text-white font-extrabold tracking-wide leading-loose text-center'>About us</h1>
+                    <p className='text-white text-center px-6 w-9/12 mx-auto'>
+                        We don't just sell clothes, we curate a lifestyle. Discover the brands that define streetwear culture. From a passion for sneakers to a love for unique styles, our collection is a testament to the brands that inspire us. Whether you're looking for the latest drops or timeless classics, we have something for every streetwear enthusiast.
+                    </p>
+                </div>
+            </div>
             <div className="w-12/12 container relative mx-auto flex items-center overflow-hidden">
                 <div className="absolute w-20 right-0 h-full bg-gradient-to-l from-black to-transparent z-10"></div>
                 <motion.div

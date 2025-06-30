@@ -1,6 +1,6 @@
 import { Product } from "@/utils/models/products";
 
-export default async function ProductPage({ params }: { params: { slug: string } }) {
+export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
     const { slug } = await params;
 
     // Simulated product data

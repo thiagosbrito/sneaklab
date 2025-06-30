@@ -9,10 +9,10 @@ export default function Navbar() {
     const { bag } = useBag();
 
     return (
-        <nav className="flex items-center p-4 py-6 sticky bg-brackground shadow-md">
+        <nav className="flex items-center p-4 py-6 fixed bg-brackground shadow-md w-full bg-current z-20">
             <div className="container w-12/12 mx-auto flex justify-between items-center">
                 <Logo />
-                <div className="space-x-4">
+                <div className="space-x-4 text-primary-foreground hidden md:flex">
                     <a href="/" className="hover:text-gray-400">Home</a>
                     <a href="/clothing" className="hover:text-gray-400">Roupas</a>
                     <a href="/sneakers" className="hover:text-gray-400">Sneakers</a>
