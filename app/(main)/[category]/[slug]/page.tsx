@@ -28,7 +28,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     ];
 
     // Find the product by ID
-    const product = products.find(p => p.uuid === slug);
+    const product = products.find(p => p.id === slug);
 
     if (!product) {
         return <div>Product not found</div>;
