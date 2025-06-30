@@ -5,4 +5,6 @@ export type Product = {
     imageUrl: string[];
     brandUUID: string;
     category: string;
+    isAvailable: boolean;
+    price: number;
 }

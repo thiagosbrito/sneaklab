@@ -1,9 +1,17 @@
-import { hasEnvVars } from "@/utils/supabase/check-env-vars";
+import { ThemeProvider } from "next-themes";
+import Navbar from "@/components/layout/Navbar";
+import Hero from "@/components/layout/Hero";
+import FeaturedSneakers from "@/components/layout/FeaturedSneakers";
+import BrandsSlider from "@/components/layout/BrandsSlider";
 
-export default async function Home() {
+const HomePage = () => {
   return (
-    <>
-      <p>Hello</p>
-    </>
+    <div className="w-screen h-screen bg-gradient-to-b from-background to-foreground text-foreground">
+        <Hero />
+        <BrandsSlider />
+        <FeaturedSneakers />
+    </div>
   );
-}
+};
+
+export default HomePage;

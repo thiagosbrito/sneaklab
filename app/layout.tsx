@@ -1,11 +1,7 @@
-
 import { Geist, Montserrat } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import "./globals.css";
 import Navbar from "@/components/layout/Navbar";
-import Hero from "@/components/layout/Hero";
-import FeaturedSneakers from "@/components/layout/FeaturedSneakers";
-import BrandsSlider from "@/components/layout/BrandsSlider";
 
 const defaultUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
@@ -43,9 +39,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <Navbar />
-          <Hero />
-          <BrandsSlider />
-          <FeaturedSneakers />
+          {children}
         </ThemeProvider>
       </body>
     </html>

@@ -67,3 +67,16 @@
     @apply bg-background text-foreground;
   }
 }
+
+@keyframes spin-once {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.animate-spin-once {
+    animation: spin-once 0.3s ease-in-out;
+}

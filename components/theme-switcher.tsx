@@ -21,11 +21,16 @@ const ThemeSwitcher = () => {
     setMounted(true);
   }, []);
 
-  if (!mounted) {
-    return null;
-  }
-
   const ICON_SIZE = 16;
+
+  if (!mounted) {
+    // Render a placeholder to prevent layout shift
+    return (
+      <Button variant="ghost" size="sm" disabled>
+        <div className="w-4 h-4 bg-gray-200 rounded-full animate-pulse"></div>
+      </Button>
+    );
+  }
 
   return (
     <DropdownMenu>
