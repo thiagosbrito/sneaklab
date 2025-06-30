@@ -1,9 +1,7 @@
 import { Product } from "@/utils/models/products";
 
-export default function ProductPage({ params }: { params: { slug: string } }) {
-    const { slug } = params;
-
-    console.log("Product ID:", slug);
+export default async function ProductPage({ params }: { params: { slug: string } }) {
+    const { slug } = await params;
 
     // Simulated product data
     const products: Product[] = [

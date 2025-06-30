@@ -1,8 +1,8 @@
 import ProductCard from "@/components/layout/ProductCard";
 import { Product } from "@/utils/models/products";
 
-const Page = ({ params }: { params: { category: string } }) => {
-    const { category } = params;
+const Page = async ({ params }: { params: { category: string } }) => {
+    const { category } = await params;
 
     const products: Product[] = [
         {

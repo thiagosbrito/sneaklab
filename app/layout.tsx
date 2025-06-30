@@ -2,6 +2,7 @@ import { Geist, Montserrat } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import "./globals.css";
 import Navbar from "@/components/layout/Navbar";
+import { BagProvider } from "@/contexts/bag";
 
 const defaultUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
@@ -30,18 +31,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={monserrat.className} suppressHydrationWarning>
-      <body className="w-screen h-screen bg-gradient-to-b from-background to-foreground text-foreground">
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <Navbar />
-          {children}
-        </ThemeProvider>
-      </body>
-    </html>
+    <BagProvider>
+      <html lang="en" className={monserrat.className} suppressHydrationWarning>
+        <body className="w-screen h-screen bg-gradient-to-b from-background to-foreground text-foreground">
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <Navbar />
+            {children}
+          </ThemeProvider>
+        </body>
+      </html>
+    </BagProvider>
   );
 }
