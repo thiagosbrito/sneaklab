@@ -2,6 +2,8 @@
 
 import { usePathname } from 'next/navigation'
 import { Search, MessageSquare, Bell, User } from 'lucide-react'
+import { useDashboardStats } from '@/hooks/useDashboardStats'
+import { formatCurrencyPortuguese } from '@/utils/currency-formatter'
 
 // Helper function to get page title from pathname
 function getPageTitle(pathname: string): string {
@@ -25,6 +27,13 @@ export default function DashboardHeader() {
   const pathname = usePathname()
   const isDashboard = pathname === '/admin/dashboard'
   const pageTitle = getPageTitle(pathname)
+  const { stats, loading } = useDashboardStats()
+
+  // Calculate revenue changes (simple example - you can enhance this)
+  const currentRevenue = stats?.totalRevenue || 0
+  const previousRevenue = currentRevenue * 0.85 // Mock previous period (85% of current)
+  const revenueChange = currentRevenue - previousRevenue
+  const isPositiveChange = revenueChange >= 0
 
   return (
     <header className="bg-white border-b border-gray-200 px-6 py-6">
@@ -35,9 +44,18 @@ export default function DashboardHeader() {
             <>
               <h1 className="text-2xl font-bold text-gray-900">Total Revenue</h1>
               <div className="flex items-center space-x-4 mt-1">
-                <span className="text-3xl font-bold text-gray-900">$ 45,365.00</span>
-                <span className="text-red-500 text-sm">▼ $1284</span>
-                <span className="text-green-500 text-sm">▲ $1294</span>
+                {loading ? (
+                  <div className="h-8 w-32 bg-gray-200 animate-pulse rounded"></div>
+                ) : (
+                  <>
+                    <span className="text-3xl font-bold text-gray-900">
+                      {formatCurrencyPortuguese(currentRevenue)}
+                    </span>
+                    <span className={`text-sm ${isPositiveChange ? 'text-green-500' : 'text-red-500'}`}>
+                      {isPositiveChange ? '▲' : '▼'} {formatCurrencyPortuguese(Math.abs(revenueChange))}
+                    </span>
+                  </>
+                )}
               </div>
             </>
           ) : (
