@@ -12,61 +12,61 @@ interface BestSellerProps {
 // Mock data for demonstration
 const mockProducts: Product[] = [
   {
-    uuid: '1',
+    id: '1',
     name: 'Product name',
     description: 'Variant',
     imageUrl: ['/public/brands/samples/shoes_001_225x225.jpeg'],
-    brandUUID: 'brand1',
+    brandID: 'brand1',
     category: 'sneakers',
     isAvailable: true,
     price: 55
   },
   {
-    uuid: '2',
+    id: '2',
     name: 'Product name',
     description: 'Variant',
     imageUrl: ['/public/brands/samples/shoes_002_140x960.jpeg'],
-    brandUUID: 'brand2',
+    brandID: 'brand2',
     category: 'sneakers',
     isAvailable: true,
     price: 55
   },
   {
-    uuid: '3',
+    id: '3',
     name: 'Product name',
     description: 'Variant',
     imageUrl: ['/public/brands/samples/shoes_003_1200x1101.jpeg'],
-    brandUUID: 'brand3',
+    brandID: 'brand3',
     category: 'sneakers',
     isAvailable: true,
     price: 55
   },
   {
-    uuid: '4',
+    id: '4',
     name: 'Product name',
     description: 'Variant',
     imageUrl: ['/public/brands/samples/shoes_001_225x225.jpeg'],
-    brandUUID: 'brand4',
+    brandID: 'brand4',
     category: 'sneakers',
     isAvailable: true,
     price: 55
   },
   {
-    uuid: '5',
+    id: '5',
     name: 'Product name',
     description: 'Variant',
     imageUrl: ['/public/brands/samples/shoes_002_140x960.jpeg'],
-    brandUUID: 'brand5',
+    brandID: 'brand5',
     category: 'sneakers',
     isAvailable: true,
     price: 55
   },
   {
-    uuid: '6',
+    id: '6',
     name: 'Product name',
     description: 'Variant',
     imageUrl: ['/public/brands/samples/shoes_003_1200x1101.jpeg'],
-    brandUUID: 'brand6',
+    brandID: 'brand6',
     category: 'sneakers',
     isAvailable: true,
     price: 55
@@ -129,7 +129,7 @@ export default function BestSeller({ products = mockProducts }: BestSellerProps)
           >
             {products.map((product) => (
               <div 
-                key={product.uuid} 
+                key={product.id} 
                 className="flex-none w-72"
               >
                 <div className="bg-gray-200 rounded-2xl p-6 h-80 flex items-center justify-center mb-4">

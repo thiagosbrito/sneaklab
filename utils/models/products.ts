@@ -1,9 +1,9 @@
 export type Product = {
-    uuid: string;
+    id: string;
     name: string;
     description: string;
     imageUrl: string[];
-    brandUUID: string;
+    brandID: string;
     category: string;
     isAvailable: boolean;
     price: number;

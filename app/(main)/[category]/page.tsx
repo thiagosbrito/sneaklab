@@ -6,61 +6,61 @@ const Page = async ({ params }: { params: Promise<{ category: string }> }) => {
 
     const products: Product[] = [
         {
-            uuid: "1",
+            id: "1",
             name: "Sneaker A",
             description: "A stylish sneaker for everyday wear.",
             imageUrl: ["/brands/samples/shoes_002_140x960.jpeg"],
-            brandUUID: "brand-1",
+            brandID: "brand-1",
             category: category,
             isAvailable: true,
             price: 99.99
         },
         {
-            uuid: "2",
+            id: "2",
             name: "Back to the Future",
             description: "An exceptional sneaker with a futuristic design.",
             imageUrl: ["/brands/samples/shoes_003_1200x1101.jpeg"],
-            brandUUID: "brand-2",
+            brandID: "brand-2",
             category: category,
             isAvailable: true,
             price: 899.00
         },
         {
-            uuid: "3",
+            id: "3",
             name: "Sneaker A",
             description: "A stylish sneaker for everyday wear.",
             imageUrl: ["/brands/samples/shoes_002_140x960.jpeg"],
-            brandUUID: "brand-1",
+            brandID: "brand-1",
             category: category,
             isAvailable: true,
             price: 99.99
         },
         {
-            uuid: "4",
+            id: "4",
             name: "Sneaker B",
             description: "A comfortable sneaker for running.",
             imageUrl: ["/brands/samples/shoes_002_140x960.jpeg"],
-            brandUUID: "brand-2",
+            brandID: "brand-2",
             category: category,
             isAvailable: true,
             price: 89.99
         },
         {
-            uuid: "5",
+            id: "5",
             name: "Sneaker A",
             description: "A stylish sneaker for everyday wear.",
             imageUrl: ["/brands/samples/shoes_002_140x960.jpeg"],
-            brandUUID: "brand-1",
+            brandID: "brand-1",
             category: category,
             isAvailable: true,
             price: 99.99
         },
         {
-            uuid: "6",
+            id: "6",
             name: "Sneaker B",
             description: "A comfortable sneaker for running.",
             imageUrl: ["/brands/samples/shoes_002_140x960.jpeg"],
-            brandUUID: "brand-2",
+            brandID: "brand-2",
             category: category,
             isAvailable: true,
             price: 89.99

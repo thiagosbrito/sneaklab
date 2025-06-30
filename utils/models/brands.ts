@@ -1,4 +1,5 @@
 export type Brand = {
-    uuid: string;
+    id: string;
     name: string;
+    logo: string
 }
