@@ -3,6 +3,7 @@ import { ThemeProvider } from "next-themes";
 import "./globals.css";
 import Navbar from "@/components/layout/Navbar";
 import { BagProvider } from "@/contexts/bag";
+import { AuthProvider } from "@/contexts/auth";
 import { ReactQueryClientProvider } from "@/contexts/ReactQueryClientProvider";
 
 const defaultUrl = process.env.VERCEL_URL
@@ -33,20 +34,22 @@ export default function RootLayout({
 }>) {
   return (
     <ReactQueryClientProvider>
-      <BagProvider>
-        <html lang="en" className={monserrat.className} suppressHydrationWarning>
-          <body className="w-screen h-screen bg-gradient-to-b from-background to-foreground text-foreground">
-            <ThemeProvider
-              attribute="class"
-              defaultTheme="system"
-              enableSystem
-              disableTransitionOnChange
-            >
-              {children}
-            </ThemeProvider>
-          </body>
-        </html>
-      </BagProvider>
+      <AuthProvider>
+        <BagProvider>
+          <html lang="en" className={monserrat.className} suppressHydrationWarning>
+            <body className="w-screen h-screen bg-gradient-to-b from-background to-foreground text-foreground">
+              <ThemeProvider
+                attribute="class"
+                defaultTheme="system"
+                enableSystem
+                disableTransitionOnChange
+              >
+                {children}
+              </ThemeProvider>
+            </body>
+          </html>
+        </BagProvider>
+      </AuthProvider>
     </ReactQueryClientProvider>
   );
 }
