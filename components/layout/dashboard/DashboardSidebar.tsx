@@ -3,40 +3,53 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Package, Users, ShoppingCart, BarChart3, Settings } from 'lucide-react'
+import { Package, Users, ShoppingCart, BarChart3, Settings, BadgePercent } from 'lucide-react'
 
-const sidebarItems = [
+import type { Database } from '@/utils/supabase/database.types';
+
+type SidebarItem = {
+  href: string;
+  icon: React.ElementType;
+  label: string;
+};
+
+const sidebarItems: SidebarItem[] = [
   {
     href: '/admin/dashboard',
     icon: BarChart3,
-    label: 'Dashboard'
+    label: 'Dashboard',
   },
   {
     href: '/admin/orders',
     icon: ShoppingCart,
-    label: 'Order'
+    label: 'Order',
   },
   {
     href: '/admin/products',
     icon: Package,
-    label: 'Products'
+    label: 'Products',
+  },
+  {
+    href: '/admin/brands',
+    icon: BadgePercent,
+    label: 'Brands',
   },
   {
     href: '/admin/categories',
     icon: Package,
-    label: 'Categories'
+    label: 'Categories',
   },
   {
     href: '/admin/customers',
     icon: Users,
-    label: 'Customers'
+    label: 'Customers',
   },
   {
     href: '/admin/settings',
     icon: Settings,
-    label: 'Settings'
-  }
-]
+    label: 'Settings',
+  },
+];
 
 export default function DashboardSidebar() {
   const pathname = usePathname()

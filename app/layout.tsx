@@ -2,9 +2,7 @@ import { Geist, Montserrat } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import "./globals.css";
 import Navbar from "@/components/layout/Navbar";
-import { BagProvider } from "@/contexts/bag";
-import { AuthProvider } from "@/contexts/auth";
-import { ReactQueryClientProvider } from "@/contexts/ReactQueryClientProvider";
+import Providers from "./providers";
 
 const defaultUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
@@ -27,29 +25,21 @@ const monserrat = Montserrat({
     variable: "--font-montserrat",
 })
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <ReactQueryClientProvider>
-      <AuthProvider>
-        <BagProvider>
-          <html lang="en" className={monserrat.className} suppressHydrationWarning>
-            <body className="w-screen h-screen bg-gradient-to-b from-background to-foreground text-foreground">
-              <ThemeProvider
-                attribute="class"
-                defaultTheme="system"
-                enableSystem
-                disableTransitionOnChange
-              >
-                {children}
-              </ThemeProvider>
-            </body>
-          </html>
-        </BagProvider>
-      </AuthProvider>
-    </ReactQueryClientProvider>
+    <html lang="en" className={monserrat.className} suppressHydrationWarning>
+      <body className="w-screen h-screen bg-gradient-to-b from-background to-foreground text-foreground">
+        <Providers>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            {children}
+          </ThemeProvider>
+        </Providers>
+      </body>
+    </html>
   );
 }

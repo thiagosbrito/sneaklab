@@ -1,9 +1,10 @@
 'use client'
 
-import { usePathname } from 'next/navigation'
-import { Search, MessageSquare, Bell, User } from 'lucide-react'
-import { useDashboardStats } from '@/hooks/useDashboardStats'
-import { formatCurrencyPortuguese } from '@/utils/currency-formatter'
+import { usePathname, useRouter } from 'next/navigation';
+import { Search, MessageSquare, Bell, User } from 'lucide-react';
+import { useDashboardStats } from '@/hooks/useDashboardStats';
+import { formatCurrencyPortuguese } from '@/utils/currency-formatter';
+import UserDropdown from './UserDropdown';
 
 // Helper function to get page title from pathname
 function getPageTitle(pathname: string): string {
@@ -86,11 +87,9 @@ export default function DashboardHeader() {
             <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
           </button>
 
-          {/* User Profile */}
+          {/* User Profile Dropdown */}
           <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
-              <User className="w-4 h-4 text-gray-600" />
-            </div>
+            <UserDropdown />
           </div>
         </div>
       </div>

@@ -10,9 +10,20 @@ import PerformanceIndicators from '@/components/layout/dashboard/PerformanceIndi
 import { formatCurrency } from '@/utils/dashboard-analytics'
 import { formatCurrencyPortuguese, debugCurrencyFormatting } from '@/utils/currency-formatter'
 import { useDashboardStats } from '@/hooks/useDashboardStats'
+import { useAuth } from '@/contexts/auth'
+import { useRouter } from 'next/navigation'
+import { useEffect } from 'react'
 
 export default function DashboardPage() {
     const { stats, loading, error } = useDashboardStats()
+    const { user, loading: userLoading } = useAuth();
+    const router = useRouter();
+
+    useEffect(() => {
+        if (!user && !userLoading) {
+            router.push('/admin/sign-in');
+        }
+    }, [user, userLoading, router]);
 
     // Debug logging
     console.log('🎛️ Dashboard stats:', stats)

@@ -1,13 +1,14 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Tables } from '@/utils/supabase/database.types'
+import { Tables, Database } from '@/utils/supabase/database.types'
 import useSupabaseBrowser from '@/utils/supabase/client'
 import { useTable } from '@/hooks/useTable'
 import TableHeader from '@/components/ui/TableHeader'
 import DataTable, { Column } from '@/components/ui/DataTable'
 import Pagination from '@/components/ui/Pagination'
-import Sidebar from '@/components/ui/Sidebar'
+import DashboardSheet from '@/components/ui/DashboardSheet'
+import ProductForm from '@/components/admin/products/ProductForm'
 import { Edit, Trash2, Eye, Package } from 'lucide-react'
 
 type Product = Tables<'products'>
@@ -19,8 +20,8 @@ export default function ProductsPage() {
   const [brands, setBrands] = useState<Brand[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
-  const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
+  const [sheetOpen, setSheetOpen] = useState(false)
+  const [sheetLoading, setSheetLoading] = useState(false)
   const supabase = useSupabaseBrowser()
 
   const {
@@ -204,8 +205,8 @@ export default function ProductsPage() {
           <button
             onClick={(e) => {
               e.stopPropagation()
-              setSelectedProduct(product)
-              setSidebarOpen(true)
+              // setSelectedProduct(product)
+              // setSidebarOpen(true)
             }}
             className="p-1 text-blue-600 hover:text-blue-800"
             title="View details"
@@ -240,8 +241,23 @@ export default function ProductsPage() {
   ]
 
   const handleAddProduct = () => {
-    setSelectedProduct(null)
-    setSidebarOpen(true)
+    setSheetOpen(true)
+  }
+
+  async function handleProductSubmit(product: Omit<Database['public']['Tables']['products']['Insert'], 'id'>) {
+    setSheetLoading(true)
+    // Save product to supabase
+    const { error } = await supabase.from('products').insert([product])
+    setSheetLoading(false)
+    if (!error) {
+      setSheetOpen(false)
+      // Optionally, refetch products
+      const { data: productsData } = await supabase
+        .from('products')
+        .select('*')
+        .order('created_at', { ascending: false })
+      setProducts(productsData || [])
+    }
   }
 
   return (
@@ -292,10 +308,10 @@ export default function ProductsPage() {
         columns={columns}
         loading={loading}
         emptyMessage="No products found"
-        onRowClick={(product) => {
-          setSelectedProduct(product)
-          setSidebarOpen(true)
-        }}
+        // onRowClick={(product) => {
+        //   setSelectedProduct(product)
+        //   setSidebarOpen(true)
+        // }}
       />
 
       {totalPages > 1 && (
@@ -309,255 +325,16 @@ export default function ProductsPage() {
         />
       )}
 
-      <Sidebar
-        isOpen={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-        title={selectedProduct ? 'Product Details' : 'Add New Product'}
-        width="lg"
+      <DashboardSheet
+        open={sheetOpen}
+        onOpenChange={setSheetOpen}
+        title="Add Product"
+        description="Fill in the details to add a new product."
+        footer={null}
+        size="xl"
       >
-        {selectedProduct ? (
-          <div className="space-y-4">
-            {/* Product Image */}
-            {selectedProduct.imageURL && selectedProduct.imageURL[0] && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Product Image
-                </label>
-                <img 
-                  src={selectedProduct.imageURL[0]} 
-                  alt={selectedProduct.name}
-                  className="w-full h-48 object-cover rounded-lg"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement
-                    target.style.display = 'none'
-                  }}
-                />
-              </div>
-            )}
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Product Name
-              </label>
-              <p className="text-sm text-gray-900">{selectedProduct.name}</p>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Description
-              </label>
-              <p className="text-sm text-gray-900">{selectedProduct.description || '-'}</p>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Brand
-                </label>
-                <p className="text-sm text-gray-900">{getBrandName(selectedProduct.brandID)}</p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Category
-                </label>
-                <p className="text-sm text-gray-900">{getCategoryName(selectedProduct.categoryID)}</p>
-              </div>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Price
-              </label>
-              <div className="flex items-center space-x-2">
-                <p className="text-sm text-gray-900">${selectedProduct.price}</p>
-                {selectedProduct.promoPrice && (
-                  <span className="text-sm text-green-600 font-medium">
-                    (Promo: ${selectedProduct.promoPrice})
-                  </span>
-                )}
-              </div>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Status
-              </label>
-              <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                selectedProduct.isAvailable 
-                  ? 'bg-green-100 text-green-800' 
-                  : 'bg-red-100 text-red-800'
-              }`}>
-                {selectedProduct.isAvailable ? 'Available' : 'Unavailable'}
-              </span>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Created Date
-              </label>
-              <p className="text-sm text-gray-900">
-                {selectedProduct.created_at ? new Date(selectedProduct.created_at).toLocaleString() : '-'}
-              </p>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="pt-4 border-t border-gray-200">
-              <div className="flex space-x-3">
-                <button
-                  onClick={() => {
-                    // TODO: Handle edit
-                    console.log('Edit product:', selectedProduct.id)
-                  }}
-                  className="flex items-center space-x-2 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors text-sm"
-                >
-                  <Edit className="w-4 h-4" />
-                  <span>Edit Product</span>
-                </button>
-                <button
-                  onClick={() => {
-                    // TODO: Handle delete
-                    console.log('Delete product:', selectedProduct.id)
-                  }}
-                  className="flex items-center space-x-2 bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors text-sm"
-                >
-                  <Trash2 className="w-4 h-4" />
-                  <span>Delete Product</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            <p className="text-gray-600 mb-4">
-              Fill in the details below to add a new product.
-            </p>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Product Name *
-              </label>
-              <input
-                type="text"
-                placeholder="Enter product name"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Description
-              </label>
-              <textarea
-                placeholder="Enter product description"
-                rows={3}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Brand *
-                </label>
-                <select className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                  <option value="">Select a brand</option>
-                  {brands.map(brand => (
-                    <option key={brand.id} value={brand.id}>
-                      {brand.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Category *
-                </label>
-                <select className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                  <option value="">Select a category</option>
-                  {categories.map(category => (
-                    <option key={category.id} value={category.id}>
-                      {category.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Price *
-                </label>
-                <input
-                  type="number"
-                  placeholder="0.00"
-                  min="0"
-                  step="0.01"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Promo Price
-                </label>
-                <input
-                  type="number"
-                  placeholder="0.00"
-                  min="0"
-                  step="0.01"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Image URLs
-              </label>
-              <input
-                type="url"
-                placeholder="https://example.com/image.jpg"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                Add the main product image URL. Multiple images support coming soon.
-              </p>
-            </div>
-            
-            <div>
-              <label className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  defaultChecked
-                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                />
-                <span className="text-sm text-gray-700">Product is available</span>
-              </label>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="pt-4 border-t border-gray-200">
-              <div className="flex space-x-3">
-                <button
-                  onClick={() => {
-                    // TODO: Handle save
-                    console.log('Save new product')
-                  }}
-                  className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium"
-                >
-                  Save Product
-                </button>
-                <button
-                  onClick={() => setSidebarOpen(false)}
-                  className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition-colors text-sm font-medium"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-      </Sidebar>
+        <ProductForm onSubmit={handleProductSubmit} loading={sheetLoading} brands={brands} categories={categories} />
+      </DashboardSheet>
     </div>
   )
 }
