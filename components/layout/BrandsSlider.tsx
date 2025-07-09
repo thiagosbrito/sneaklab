@@ -2,6 +2,8 @@
 import Image from 'next/image';
 import { motion, useAnimation } from 'framer-motion';
 import { useRef, useEffect, useState } from 'react';
+import useSupabaseBrowser from '@/utils/supabase/client';
+import { Database } from '@/utils/supabase/database.types';
 
 const brandLogos = [
   'logos-marcas-Adidas-branco.webp',
@@ -48,13 +50,30 @@ export default function BrandsSlider() {
         animate();
     }, [rowWidth, controls]);
 
+    const [aboutUsContent, setAboutUsContent] = useState<Database["public"]["Tables"]["about_us_section"]["Row"] | null>(null);
+    const supabase = useSupabaseBrowser();
+
+    useEffect(() => {
+    const fetchAboutUsContent = async () => {
+      const { data, error } = await supabase.from("about_us_section").select("*").single();
+      if (error) {
+        console.error("Error fetching showcase section:", error.message);
+      } else {
+        setAboutUsContent(data);
+      }
+    };
+
+    fetchAboutUsContent();
+  }, [supabase]);
+
+
     return (
         <div className="overflow-hidden w-full py-4 bg-black space-y-6">
             <div className="container">
                 <div className="flex flex-col gap-y-6">
-                    <h1 className='text-4xl text-white font-extrabold tracking-wide leading-loose text-center'>About us</h1>
+                    <h1 className='text-4xl text-white font-extrabold tracking-wide leading-loose text-center'>{aboutUsContent?.title}</h1>
                     <p className='text-white text-center px-6 w-9/12 mx-auto'>
-                        We don't just sell clothes, we curate a lifestyle. Discover the brands that define streetwear culture. From a passion for sneakers to a love for unique styles, our collection is a testament to the brands that inspire us. Whether you're looking for the latest drops or timeless classics, we have something for every streetwear enthusiast.
+                        {aboutUsContent?.description}
                     </p>
                 </div>
             </div>
