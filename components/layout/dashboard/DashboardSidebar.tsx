@@ -3,7 +3,8 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Package, Users, ShoppingCart, BarChart3, Settings, BadgePercent } from 'lucide-react'
+import { Package, Users, ShoppingCart, BarChart3, Settings, BadgePercent, TableOfContents } from 'lucide-react'
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 
 import type { Database } from '@/utils/supabase/database.types';
 
@@ -91,6 +92,21 @@ export default function DashboardSidebar() {
             </Link>
           )
         })}
+
+        {/* Collapsible Content Management Section */}
+        <Accordion type="single" collapsible>
+          <AccordionItem value="content-management">
+            <AccordionTrigger className="flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors text-gray-700 hover:bg-gray-100 hover:text-gray-900">
+              <TableOfContents className="w-5 h-5" />
+              <span>Content Management</span>
+            </AccordionTrigger>
+            <AccordionContent>
+              <Link href="/admin/content-management/hero" className="block py-2 px-3 text-sm hover:bg-gray-100 rounded-lg">Hero Section</Link>
+              <Link href="/admin/content-management/showcase" className="block py-2 px-3 text-sm hover:bg-gray-100 rounded-lg">Showcase Section</Link>
+              <Link href="/admin/content-management/about-us" className="block py-2 px-3 text-sm hover:bg-gray-100 rounded-lg">About Us Section</Link>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
       </nav>
 
       {/* Customer Support */}

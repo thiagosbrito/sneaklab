@@ -1,13 +1,16 @@
-import { useState } from 'react'
-import { Tables } from '@/utils/supabase/database.types'
+import { useForm } from 'react-hook-form'
+import { z } from 'zod'
+import { zodResolver } from '@hookform/resolvers/zod'
 
-export type CategoryFormValues = {
-  name: string
-  slug: string
-  description?: string
-  showInMenu: boolean
-  imageURL: string[]
-}
+const categorySchema = z.object({
+  name: z.string().min(1, 'Category name is required'),
+  slug: z.string().min(1, 'Slug is required'),
+  description: z.string().optional(),
+  showInMenu: z.boolean(),
+  imageURL: z.array(z.string()).optional(),
+})
+
+export type CategoryFormValues = z.infer<typeof categorySchema>
 
 type CategoryFormProps = {
   initialValues?: CategoryFormValues
@@ -16,80 +19,60 @@ type CategoryFormProps = {
 }
 
 export default function CategoryForm({ initialValues, onSubmit, loading }: CategoryFormProps) {
-  const [form, setForm] = useState<CategoryFormValues>(
-    initialValues || {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<CategoryFormValues>({
+    resolver: zodResolver(categorySchema),
+    defaultValues: initialValues || {
       name: '',
       slug: '',
       description: '',
       showInMenu: true,
       imageURL: [],
-    }
-  )
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value, type } = e.target
-    let fieldValue: string | boolean = value
-    if (type === 'checkbox') {
-      fieldValue = (e.target as HTMLInputElement).checked
-    }
-    setForm((prev) => ({
-      ...prev,
-      [name]: fieldValue,
-    }))
-  }
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    onSubmit(form)
-  }
+    },
+  })
 
   return (
-    <form className="space-y-4" onSubmit={handleSubmit}>
+    <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Category Name</label>
         <input
-          name="name"
+          {...register('name')}
           type="text"
-          value={form.name}
-          onChange={handleChange}
-          required
           className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
+        {errors.name && <p className="text-red-500 text-sm">{errors.name.message}</p>}
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Slug</label>
         <input
-          name="slug"
+          {...register('slug')}
           type="text"
-          value={form.slug}
-          onChange={handleChange}
-          required
           className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
+        {errors.slug && <p className="text-red-500 text-sm">{errors.slug.message}</p>}
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
         <textarea
-          name="description"
-          value={form.description}
-          onChange={handleChange}
+          {...register('description')}
           rows={3}
           className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
+        {errors.description && <p className="text-red-500 text-sm">{errors.description.message}</p>}
       </div>
       <div>
         <label className="flex items-center space-x-2">
           <input
-            name="showInMenu"
+            {...register('showInMenu')}
             type="checkbox"
-            checked={form.showInMenu}
-            onChange={handleChange}
             className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
           />
           <span className="text-sm text-gray-700">Show in menu</span>
         </label>
       </div>
-      {/* Image upload can be added here if needed */}
       <button
         type="submit"
         className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors"

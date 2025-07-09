@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      about_us_section: {
+        Row: {
+          created_at: string | null
+          description: string
+          id: number
+          title: string
+        }
+        Insert: {
+          created_at?: string | null
+          description: string
+          id?: number
+          title: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string
+          id?: number
+          title?: string
+        }
+        Relationships: []
+      }
       brands: {
         Row: {
           created_at: string
@@ -62,6 +83,36 @@ export type Database = {
           name?: string
           showInMenu?: boolean
           slug?: string
+        }
+        Relationships: []
+      }
+      hero_section: {
+        Row: {
+          background_image_url: string
+          created_at: string | null
+          cta_redirect_to: string
+          cta_text: string
+          hero_subtitle: string
+          hero_title: string
+          id: number
+        }
+        Insert: {
+          background_image_url: string
+          created_at?: string | null
+          cta_redirect_to: string
+          cta_text: string
+          hero_subtitle: string
+          hero_title: string
+          id?: number
+        }
+        Update: {
+          background_image_url?: string
+          created_at?: string | null
+          cta_redirect_to?: string
+          cta_text?: string
+          hero_subtitle?: string
+          hero_title?: string
+          id?: number
         }
         Relationships: []
       }
@@ -279,6 +330,42 @@ export type Database = {
           quantity?: number
           updated_at?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      showcase_section: {
+        Row: {
+          created_at: string | null
+          description: string
+          id: number
+          image_url: string
+          subtitle_a: string
+          subtitle_b: string
+          subtitle_description_a: string
+          subtitle_description_b: string
+          title: string
+        }
+        Insert: {
+          created_at?: string | null
+          description: string
+          id?: number
+          image_url: string
+          subtitle_a: string
+          subtitle_b: string
+          subtitle_description_a: string
+          subtitle_description_b: string
+          title: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string
+          id?: number
+          image_url?: string
+          subtitle_a?: string
+          subtitle_b?: string
+          subtitle_description_a?: string
+          subtitle_description_b?: string
+          title?: string
         }
         Relationships: []
       }

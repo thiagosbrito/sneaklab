@@ -10,6 +10,7 @@ import Pagination from '@/components/ui/Pagination'
 import DashboardSheet from '@/components/ui/DashboardSheet'
 import ProductForm from '@/components/admin/products/ProductForm'
 import { Edit, Trash2, Eye, Package } from 'lucide-react'
+import ImageWithFallback from '@/components/ui/ImageWithFallback'
 
 type Product = Tables<'products'>
 type Brand = Tables<'brands'>
@@ -110,23 +111,12 @@ export default function ProductsPage() {
       label: 'Image',
       width: 'w-16',
       render: (imageURL: string[] | null) => (
-        <div className="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center">
-          {imageURL && imageURL[0] ? (
-            <img 
-              src={imageURL[0]} 
-              alt="Product" 
-              className="w-full h-full object-cover rounded-lg"
-              onError={(e) => {
-                const target = e.target as HTMLImageElement
-                target.style.display = 'none'
-                const next = target.nextElementSibling as HTMLElement
-                if (next) next.classList.remove('hidden')
-              }}
-            />
-          ) : (
-            <Package className="w-6 h-6 text-gray-400" />
-          )}
-        </div>
+        <ImageWithFallback
+          src={imageURL && imageURL[0] ? imageURL[0] : ''}
+          alt="Product"
+          className="w-full h-full object-cover rounded-lg"
+          fallback={<Package className="w-6 h-6 text-gray-400" />}
+        />
       )
     },
     {

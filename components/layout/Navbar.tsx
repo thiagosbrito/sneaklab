@@ -55,8 +55,8 @@ export default function Navbar({ menuItems = [] }: NavbarProps) {
                                 </Link>
                             ))
                         }
-                        <Link href="/brands" className="hover:text-gray-400">Marcas</Link>
-                        <Link href="/contact" className="hover:text-gray-400">Contato</Link>
+                        <Link href="/marcas" className="hover:text-gray-400">Marcas</Link>
+                        <Link href="/fale-conosco" className="hover:text-gray-400">Contato</Link>
                     </div>
                     <div className="flex items-center space-x-4">
                         {!loading && (

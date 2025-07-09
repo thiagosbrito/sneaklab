@@ -2,7 +2,15 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /* config options here */
-  
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "ovluplweospdirelbzas.supabase.co",
+        pathname: "/storage/v1/object/public/content-images/**",
+      },
+    ],
+  },
   // Exclude Supabase functions from compilation
   webpack: (config, { isServer }) => {
     // Exclude supabase functions directory from webpack processing

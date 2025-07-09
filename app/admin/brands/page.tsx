@@ -1,9 +1,9 @@
-
 "use client";
 import { useEffect, useState } from "react";
 import type { Database } from '@/utils/supabase/database.types';
 import useSupabaseBrowser from '@/utils/supabase/client';
 import BrandForm from '@/components/brands/BrandForm';
+import ImageWithFallback from '@/components/ui/ImageWithFallback';
 
 export default function BrandsPage() {
   const supabase = useSupabaseBrowser();
@@ -51,7 +51,12 @@ export default function BrandsPage() {
           {brands.length > 0 ? (
             brands.map((brand) => (
               <div key={brand.id} className="bg-white rounded-lg shadow p-4 flex items-center space-x-4 border border-gray-100">
-                <img src={brand.logo} alt={brand.name} className="w-12 h-12 object-contain rounded" />
+                <ImageWithFallback
+                  src={brand.logo || ''}
+                  alt={brand.name}
+                  className="w-12 h-12 object-contain rounded"
+                  fallback={<div className="w-12 h-12 bg-gray-200 rounded flex items-center justify-center">No Image</div>}
+                />
                 <div>
                   <div className="font-semibold text-lg">{brand.name}</div>
                   <div className="text-xs text-gray-500">ID: {brand.id}</div>
