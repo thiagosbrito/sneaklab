@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { ThemeSwitcher } from "../theme-switcher"
 import Logo from "./Logo"
 import { useBag } from "@/hooks/bag";
-import { ShoppingBag, User, LogOut } from "lucide-react";
+import { ShoppingBag, User, LogOut, Heart, ChevronDown } from "lucide-react";
 import { Database } from "@/utils/supabase/database.types";
 import Link from "next/link";
 import BagSidebar from "../ui/BagSidebar";
@@ -21,8 +21,10 @@ interface NavbarProps {
 export default function Navbar({ menuItems = [] }: NavbarProps) {
     const [isBagOpen, setIsBagOpen] = useState(false);
     const [isAuthSidebarOpen, setIsAuthSidebarOpen] = useState(false);
+    const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
     const { bag, totalItems } = useBag();
     const { user, loading } = useAuth();
+    const dropdownRef = useRef<HTMLDivElement>(null);
 
     const handleUserAction = () => {
         if (user) {
@@ -34,7 +36,22 @@ export default function Navbar({ menuItems = [] }: NavbarProps) {
 
     const handleSignOut = async () => {
         await signOutAction();
+        setIsUserDropdownOpen(false);
     };
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setIsUserDropdownOpen(false);
+            }
+        }
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
 
     return (
         <>
@@ -63,13 +80,12 @@ export default function Navbar({ menuItems = [] }: NavbarProps) {
                             <>
                                 {user ? (
                                     <>
-                                        <span className="text-sm text-primary-foreground hidden md:block">
-                                            Welcome, {user.email?.split('@')[0]}
-                                        </span>
+                                        {/* Shopping Bag */}
                                         <div className="relative">
                                             <button 
-                                                onClick={handleUserAction}
+                                                onClick={() => setIsBagOpen(true)}
                                                 className="relative flex items-center justify-center w-10 h-10 bg-black text-white rounded-full hover:bg-gray-800 transition-colors"
+                                                title="Shopping Bag"
                                             >
                                                 <ShoppingBag className="w-6 h-6" />
                                             </button>
@@ -79,13 +95,42 @@ export default function Navbar({ menuItems = [] }: NavbarProps) {
                                                 </span>
                                             )}
                                         </div>
-                                        <button
-                                            onClick={handleSignOut}
-                                            className="p-2 text-primary-foreground hover:text-gray-400 transition-colors"
-                                            title="Sign out"
-                                        >
-                                            <LogOut className="h-5 w-5" />
-                                        </button>
+                                        
+                                        {/* User Dropdown */}
+                                        <div className="relative" ref={dropdownRef}>
+                                            <button
+                                                onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
+                                                className="flex items-center gap-2 p-2 text-primary-foreground hover:text-gray-400 transition-colors"
+                                            >
+                                                <User className="h-5 w-5" />
+                                                <span className="hidden md:block text-sm">
+                                                    {user.email?.split('@')[0]}
+                                                </span>
+                                                <ChevronDown className="h-4 w-4" />
+                                            </button>
+                                            
+                                            {/* Dropdown Menu */}
+                                            {isUserDropdownOpen && (
+                                                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-30">
+                                                    <Link
+                                                        href="/wishlist"
+                                                        className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                                                        onClick={() => setIsUserDropdownOpen(false)}
+                                                    >
+                                                        <Heart className="h-4 w-4" />
+                                                        Minha Lista de Desejos
+                                                    </Link>
+                                                    <hr className="my-1" />
+                                                    <button
+                                                        onClick={handleSignOut}
+                                                        className="flex items-center gap-3 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                                                    >
+                                                        <LogOut className="h-4 w-4" />
+                                                        Sair
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
                                     </>
                                 ) : (
                                     <button

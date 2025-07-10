@@ -9,10 +9,15 @@ const nextConfig: NextConfig = {
         hostname: "ovluplweospdirelbzas.supabase.co",
         pathname: "/storage/v1/object/public/content-images/**",
       },
+      {
+        protocol: "https",
+        hostname: "ovluplweospdirelbzas.supabase.co",
+        pathname: "/storage/v1/object/public/product-images/**",
+      },
     ],
   },
   // Exclude Supabase functions from compilation
-  webpack: (config, { isServer }) => {
+  webpack: (config) => {
     // Exclude supabase functions directory from webpack processing
     config.watchOptions = {
       ...config.watchOptions,

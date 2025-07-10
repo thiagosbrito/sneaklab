@@ -4,6 +4,8 @@ import React from "react";
 import { Product } from "@/utils/models/products";
 import { useBag } from "@/hooks/bag";
 import { useAuth } from "@/contexts/auth";
+import { useLoginDialog } from "@/contexts/loginDialog";
+import Swal from "sweetalert2";
 
 interface AddToBagButtonProps {
     product: Product;
@@ -20,14 +22,27 @@ const AddToBagButton: React.FC<AddToBagButtonProps> = ({
 }) => {
     const { addToBag, isInBag, getBagItemQuantity } = useBag();
     const { user } = useAuth();
+    const { openLoginDialog } = useLoginDialog();
     
     const itemInBag = isInBag(product.id);
     const bagQuantity = getBagItemQuantity(product.id);
 
     const handleAddToBag = () => {
         if (!user) {
-            // Could show a toast notification here
-            alert('Please sign in to add items to your bag');
+            Swal.fire({
+                icon: 'error',
+                title: 'Login Necessário',
+                text: 'Você precisa estar logado para adicionar items a sua bag',
+                confirmButtonText: 'Fazer Login',
+                showCancelButton: true,
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#000000',
+                cancelButtonColor: '#6b7280',
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    openLoginDialog();
+                }
+            });
             return;
         }
         addToBag(product, quantity);

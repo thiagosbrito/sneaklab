@@ -307,27 +307,21 @@ export type Database = {
         Row: {
           created_at: string | null
           id: string
-          items: number[] | null
-          product_id: string
-          quantity: number
+          items: Json
           updated_at: string | null
           user_id: string | null
         }
         Insert: {
           created_at?: string | null
           id?: string
-          items?: number[] | null
-          product_id: string
-          quantity?: number
+          items?: Json
           updated_at?: string | null
           user_id?: string | null
         }
         Update: {
           created_at?: string | null
           id?: string
-          items?: number[] | null
-          product_id?: string
-          quantity?: number
+          items?: Json
           updated_at?: string | null
           user_id?: string | null
         }

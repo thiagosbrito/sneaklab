@@ -1,86 +1,87 @@
+"use client";
+
+import { use } from "react";
 import ProductCard from "@/components/layout/ProductCard";
-import { Product } from "@/utils/models/products";
+import { useProducts } from "@/hooks/useProducts";
+import { Loader2, AlertCircle } from "lucide-react";
 
-const Page = async ({ params }: { params: Promise<{ category: string }> }) => {
-    const { category } = await params;
+const Page = ({ params }: { params: Promise<{ category: string }> }) => {
+    const { category } = use(params);
+    const { products, loading, error, pagination } = useProducts({ 
+        category: category,
+        limit: 24,
+        sortBy: 'created_at',
+        sortOrder: 'desc'
+    });
 
-    const products: Product[] = [
-        {
-            id: "1",
-            name: "Sneaker A",
-            description: "A stylish sneaker for everyday wear.",
-            imageUrl: ["/brands/samples/shoes_002_140x960.jpeg"],
-            brandID: "brand-1",
-            category: category,
-            isAvailable: true,
-            price: 99.99
-        },
-        {
-            id: "2",
-            name: "Back to the Future",
-            description: "An exceptional sneaker with a futuristic design.",
-            imageUrl: ["/brands/samples/shoes_003_1200x1101.jpeg"],
-            brandID: "brand-2",
-            category: category,
-            isAvailable: true,
-            price: 899.00
-        },
-        {
-            id: "3",
-            name: "Sneaker A",
-            description: "A stylish sneaker for everyday wear.",
-            imageUrl: ["/brands/samples/shoes_002_140x960.jpeg"],
-            brandID: "brand-1",
-            category: category,
-            isAvailable: true,
-            price: 99.99
-        },
-        {
-            id: "4",
-            name: "Sneaker B",
-            description: "A comfortable sneaker for running.",
-            imageUrl: ["/brands/samples/shoes_002_140x960.jpeg"],
-            brandID: "brand-2",
-            category: category,
-            isAvailable: true,
-            price: 89.99
-        },
-        {
-            id: "5",
-            name: "Sneaker A",
-            description: "A stylish sneaker for everyday wear.",
-            imageUrl: ["/brands/samples/shoes_002_140x960.jpeg"],
-            brandID: "brand-1",
-            category: category,
-            isAvailable: true,
-            price: 99.99
-        },
-        {
-            id: "6",
-            name: "Sneaker B",
-            description: "A comfortable sneaker for running.",
-            imageUrl: ["/brands/samples/shoes_002_140x960.jpeg"],
-            brandID: "brand-2",
-            category: category,
-            isAvailable: true,
-            price: 89.99
-        }
-    ]
+    if (loading) {
+        return (
+            <div className="min-h-[400px] flex items-center justify-center">
+                <div className="text-center">
+                    <Loader2 className="w-12 h-12 animate-spin mx-auto mb-4 text-purple-600" />
+                    <h2 className="text-xl font-semibold text-gray-700 mb-2">Loading {category}...</h2>
+                    <p className="text-gray-500">Fetching the latest products for you</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="min-h-[400px] flex items-center justify-center">
+                <div className="text-center">
+                    <AlertCircle className="w-12 h-12 mx-auto mb-4 text-red-500" />
+                    <h2 className="text-xl font-semibold text-gray-700 mb-2">Error Loading Products</h2>
+                    <p className="text-gray-500 mb-4">{error}</p>
+                    <button 
+                        onClick={() => window.location.reload()}
+                        className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors"
+                    >
+                        Try Again
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    if (products.length === 0) {
+        return (
+            <div className="min-h-[400px] flex items-center justify-center">
+                <div className="text-center">
+                    <h2 className="text-2xl font-bold text-gray-700 mb-2">No {category} Found</h2>
+                    <p className="text-gray-500 mb-4">We don't have any products in this category yet.</p>
+                    <p className="text-gray-400">Check back soon for new arrivals!</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
-        
         <>
-            <h1 className="text-2xl font-bold mb-4">Category: {category}</h1>
-            <p className="text-gray-700">This is the content for the {category} category.</p>
+            <div className="mb-8">
+                <h1 className="text-3xl font-bold mb-2 capitalize text-gray-900">
+                    {products[0]?.categoryName || category}
+                </h1>
+                <p className="text-gray-600">
+                    Discover our collection of {pagination.totalCount} amazing {category} products
+                </p>
+            </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-6">
-
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
                 {products.map((product) => (
                     <ProductCard key={product.id} product={product} />   
                 ))}
             </div>
+
+            {pagination.totalPages > 1 && (
+                <div className="text-center text-gray-500">
+                    <p>Showing {products.length} of {pagination.totalCount} products</p>
+                    <p className="text-sm mt-1">
+                        Page {pagination.currentPage} of {pagination.totalPages}
+                    </p>
+                </div>
+            )}
         </>
-        
     );
 }
 
