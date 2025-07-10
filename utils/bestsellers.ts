@@ -9,6 +9,8 @@ export type BestSellerProduct = {
   imageUrl: string[]
   brandID: string
   category: string
+  categoryID: number
+  created_at: string
   isAvailable: boolean
   total_quantity_sold: number
   total_revenue: number
@@ -43,6 +45,8 @@ export async function getBestSellers(limit: number = 20): Promise<BestSellerProd
           imageUrl,
           brandID,
           category,
+          categoryID,
+          created_at,
           isAvailable
         )
       `)
@@ -100,6 +104,8 @@ export async function getBestSellers(limit: number = 20): Promise<BestSellerProd
         imageUrl: item.product.imageUrl || [],
         brandID: item.product.brandID?.toString() || '',
         category: item.product.category || '',
+        categoryID: item.product.categoryID,
+        created_at: item.product.created_at,
         isAvailable: item.product.isAvailable,
         total_quantity_sold: item.total_quantity_sold,
         total_revenue: item.total_revenue,

@@ -206,7 +206,9 @@ export default function BestSeller({ limit = 20 }: BestSellerProps) {
                         brandID: product.brandID,
                         category: product.category,
                         isAvailable: product.isAvailable,
-                        price: product.price
+                        price: product.price,
+                        categoryID: product.categoryID,
+                        created_at: product.created_at
                       }}
                       showText={true}
                       className="w-full justify-center"
@@ -234,10 +236,8 @@ export default function BestSeller({ limit = 20 }: BestSellerProps) {
                   const newIndex = index * itemsPerView;
                   setCurrentIndex(Math.min(newIndex, maxIndex));
                   if (scrollContainerRef.current) {
-                    const container = scrollContainerRef.current;
-                    const itemWidth = container.scrollWidth / bestsellers.length;
-                    container.scrollTo({
-                      left: newIndex * itemWidth,
+                    scrollContainerRef.current.scrollTo({
+                      left: newIndex * (scrollContainerRef.current.scrollWidth / bestsellers.length),
                       behavior: 'smooth'
                     });
                   }
@@ -246,21 +246,21 @@ export default function BestSeller({ limit = 20 }: BestSellerProps) {
             ))}
           </div>
 
-          {/* Navigation Arrows */}
-          <div className="flex gap-2">
-            <button
+          {/* Navigation Buttons */}
+          <div className="flex gap-4">
+            <button 
               onClick={() => scroll('left')}
+              className="p-2 bg-white/10 text-white rounded-full hover:bg-white/20 transition-colors disabled:opacity-50"
               disabled={currentIndex === 0}
-              className="p-2 border border-white/30 text-white rounded-md hover:bg-white/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <ChevronLeft size={20} />
+              <ChevronLeft className="w-5 h-5" />
             </button>
-            <button
+            <button 
               onClick={() => scroll('right')}
-              disabled={currentIndex >= maxIndex}
-              className="p-2 border border-white/30 text-white rounded-md hover:bg-white/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="p-2 bg-white/10 text-white rounded-full hover:bg-white/20 transition-colors disabled:opacity-50"
+              disabled={currentIndex === maxIndex}
             >
-              <ChevronRight size={20} />
+              <ChevronRight className="w-5 h-5" />
             </button>
           </div>
         </div>

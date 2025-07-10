@@ -1,5 +1,18 @@
 import { SupabaseClient } from '@supabase/supabase-js';
 import { Product } from './models/products';
+import { Database } from '@/utils/supabase/database.types';
+
+type WishlistRow = Database['public']['Tables']['wishlist']['Row'];
+type ProductRow = Database['public']['Tables']['products']['Row'];
+type BrandRow = Database['public']['Tables']['brands']['Row'];
+type CategoryRow = Database['public']['Tables']['categories']['Row'];
+
+type WishlistWithProduct = WishlistRow & {
+  products: ProductRow & {
+    brands: BrandRow | null;
+    categories: CategoryRow;
+  };
+};
 
 export interface WishlistItem {
   id: string;
@@ -85,23 +98,26 @@ export async function getUserWishlist(
         user_id,
         product_id,
         created_at,
-        product:products (
+        products (
           id,
           name,
           description,
           price,
-          "promoPrice",
-          "imageUrl",
-          "isAvailable",
-          category,
-          "brandId",
-          brands!inner (
+          promoPrice,
+          imageURL,
+          isAvailable,
+          brandID,
+          categoryID,
+          created_at,
+          brands (
             id,
-            name
+            name,
+            logo
           ),
-          categories!inner (
+          categories (
             id,
-            name
+            name,
+            slug
           )
         )
       `)
@@ -114,12 +130,26 @@ export async function getUserWishlist(
     }
 
     // Transform the data to match our Product model
-    const transformedWishlist: WishlistItem[] = data?.map(item => ({
-      ...item,
-      product: item.product ? {
-        ...item.product,
-        brandName: item.product.brands?.name,
-        categoryName: item.product.categories?.name,
+    const transformedWishlist: WishlistItem[] = data?.map((item: any) => ({
+      id: item.id,
+      user_id: item.user_id,
+      product_id: item.product_id,
+      created_at: item.created_at || '',
+      product: item.products ? {
+        id: item.products.id.toString(),
+        name: item.products.name,
+        description: item.products.description,
+        imageUrl: item.products.imageURL || [],
+        brandID: item.products.brandID?.toString() || '',
+        brandName: item.products.brands?.name,
+        brandLogo: item.products.brands?.logo,
+        category: item.products.categories?.slug || '',
+        categoryID: item.products.categoryID,
+        categoryName: item.products.categories?.name,
+        isAvailable: item.products.isAvailable,
+        price: item.products.price || 0,
+        promoPrice: item.products.promoPrice,
+        created_at: item.products.created_at
       } : undefined
     })) || [];
 

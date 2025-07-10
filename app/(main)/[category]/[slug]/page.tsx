@@ -44,7 +44,10 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
     // Check if product is in wishlist when product loads
     useEffect(() => {
         if (product) {
-            checkIsInWishlist(product.id).then(setIsWishlisted);
+            const productId = parseInt(product.id, 10); // Convert product.id to a number
+            if (!isNaN(productId)) {
+                checkIsInWishlist(productId).then(setIsWishlisted);
+            }
         }
     }, [product, checkIsInWishlist]);
 
@@ -88,14 +91,14 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
 
     const handleToggleWishlist = async () => {
         if (!product) return;
-        
         setWishlistLoading(true);
-        const success = await toggleWishlist(product.id);
-        
-        if (success) {
-            setIsWishlisted(!isWishlisted);
+        const productId = parseInt(product.id, 10); // Convert product.id to a number
+        if (!isNaN(productId)) {
+            const success = await toggleWishlist(productId);
+            if (success) {
+                setIsWishlisted(!isWishlisted);
+            }
         }
-        
         setWishlistLoading(false);
     };
 
@@ -233,7 +236,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                             {/* Add to Bag */}
                             <div className="mb-8">
                                 <AddToBagButton 
-                                    product={{...product, quantity}}
+                                    product={{...product}}
                                     showText={true}
                                     className="w-full justify-center py-4 text-lg font-semibold"
                                 />
