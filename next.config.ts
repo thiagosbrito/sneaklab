@@ -14,6 +14,11 @@ const nextConfig: NextConfig = {
         hostname: "ovluplweospdirelbzas.supabase.co",
         pathname: "/storage/v1/object/public/product-images/**",
       },
+      {
+        protocol: "https",
+        hostname: "ovluplweospdirelbzas.supabase.co",
+        pathname: "/storage/v1/object/public/brand-logos/**",
+      },
     ],
   },
   // Exclude Supabase functions from compilation

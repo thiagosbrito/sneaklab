@@ -23,6 +23,7 @@ import ProductImageCarousel from "@/components/ui/ProductImageCarousel";
 import SizeSelector from "@/components/ui/SizeSelector";
 import QuantitySelector from "@/components/ui/QuantitySelector";
 import ProductCard from "@/components/layout/ProductCard";
+import PageContainer from "@/components/ui/PageContainer";
 
 export default function ProductPage({ params }: { params: Promise<{ slug: string, category: string }> }) {
     const { slug, category } = use(params);
@@ -116,31 +117,25 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
     };
 
     return (
-        <div className="bg-gray-50 min-h-screen">
-            <div className="max-w-6xl mx-auto px-4 py-6">
-                {/* Breadcrumb */}
-                <nav className="mb-8">
-                    <div className="flex items-center space-x-2 text-sm text-gray-500">
-                        <Link href="/" className="hover:text-gray-700 transition-colors">Home</Link>
-                        <span>/</span>
-                        <Link href={`/${category}`} className="hover:text-gray-700 capitalize transition-colors">{category}</Link>
-                        <span>/</span>
-                        <span className="text-gray-900 font-medium">{product.name}</span>
-                    </div>
-                </nav>
+        <PageContainer
+            breadcrumbs={[
+                { label: 'Home', href: '/' },
+                { label: category, href: `/${category}` },
+                { label: product.name, current: true }
+            ]}
+            background="white"
+        >
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                {/* Product Images - Takes up 7/12 columns for more space */}
+                <div className="lg:col-span-7">
+                    <ProductImageCarousel 
+                        images={product.imageUrl || []} 
+                        productName={product.name}
+                    />
+                </div>
 
-                <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-0">
-                        {/* Product Images - Takes up 7/12 columns for more space */}
-                        <div className="lg:col-span-7 p-6 lg:p-8">
-                            <ProductImageCarousel 
-                                images={product.imageUrl || []} 
-                                productName={product.name}
-                            />
-                        </div>
-
-                        {/* Product Details - Takes up 5/12 columns for focused content */}
-                        <div className="lg:col-span-5 p-6 lg:p-8 bg-gray-50/50">
+                {/* Product Details - Takes up 5/12 columns for focused content */}
+                <div className="lg:col-span-5">
                             {/* Header */}
                             <div className="mb-6">
                                 <div className="flex items-start justify-between mb-4">
@@ -267,36 +262,34 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                             )}
                         </div>
                     </div>
-                </div>
 
-                {/* Related Products */}
-                {relatedProducts && relatedProducts.length > 0 && (
-                    <div className="mt-16">
-                        <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">
-                            Produtos Relacionados
-                        </h2>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                            {relatedProducts
-                                .filter(p => p.id !== product.id)
-                                .slice(0, 4)
-                                .map((relatedProduct) => (
-                                <ProductCard key={relatedProduct.id} product={relatedProduct} />
-                            ))}
-                        </div>
+            {/* Related Products */}
+            {relatedProducts && relatedProducts.length > 0 && (
+                <div className="mt-16">
+                    <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">
+                        Produtos Relacionados
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        {relatedProducts
+                            .filter(p => p.id !== product?.id)
+                            .slice(0, 4)
+                            .map((relatedProduct) => (
+                            <ProductCard key={relatedProduct.id} product={relatedProduct} />
+                        ))}
                     </div>
-                )}
-
-                {/* Back to category */}
-                <div className="mt-12 pt-8 border-t">
-                    <Link 
-                        href={`/${category}`}
-                        className="inline-flex items-center gap-2 text-purple-600 hover:text-purple-700 transition-colors font-medium"
-                    >
-                        <ArrowLeft className="w-4 h-4" />
-                        Voltar para {category}
-                    </Link>
                 </div>
+            )}
+
+            {/* Back to category */}
+            <div className="mt-12 pt-8 border-t">
+                <Link 
+                    href={`/${category}`}
+                    className="inline-flex items-center gap-2 text-purple-600 hover:text-purple-700 transition-colors font-medium"
+                >
+                    <ArrowLeft className="w-4 h-4" />
+                    Voltar para {category}
+                </Link>
             </div>
-        </div>
+        </PageContainer>
     );
 }

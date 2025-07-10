@@ -4,6 +4,7 @@ import { useWishlist } from '@/hooks/useWishlist';
 import { useAuth } from '@/contexts/auth';
 import { useLoginDialog } from '@/contexts/loginDialog';
 import ProductCard from '@/components/layout/ProductCard';
+import PageContainer from '@/components/ui/PageContainer';
 import { Loader2, Heart, ShoppingBag, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect } from 'react';
@@ -21,80 +22,94 @@ export default function WishlistPage() {
 
   if (!user) {
     return (
-      <div className="min-h-[600px] flex items-center justify-center">
-        <div className="text-center">
-          <Heart className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-          <h2 className="text-2xl font-bold text-gray-700 mb-2">Acesso Necessário</h2>
-          <p className="text-gray-500 mb-6">
-            Você precisa estar logado para ver sua lista de desejos
-          </p>
-          <button
-            onClick={openLoginDialog}
-            className="px-6 py-3 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors"
-          >
-            Fazer Login
-          </button>
+      <PageContainer
+        breadcrumbs={[
+          { label: 'Home', href: '/' },
+          { label: 'Wishlist', current: true }
+        ]}
+        title="My Wishlist"
+        description="Access required to view your wishlist"
+      >
+        <div className="min-h-[400px] flex items-center justify-center">
+          <div className="text-center">
+            <Heart className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+            <h2 className="text-2xl font-bold text-gray-700 mb-2">Acesso Necessário</h2>
+            <p className="text-gray-500 mb-6">
+              Você precisa estar logado para ver sua lista de desejos
+            </p>
+            <button
+              onClick={openLoginDialog}
+              className="px-6 py-3 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors"
+            >
+              Fazer Login
+            </button>
+          </div>
         </div>
-      </div>
+      </PageContainer>
     );
   }
 
   if (loading) {
     return (
-      <div className="min-h-[600px] flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="w-16 h-16 animate-spin mx-auto mb-4 text-purple-600" />
-          <h2 className="text-xl font-semibold text-gray-700 mb-2">Carregando Wishlist...</h2>
-          <p className="text-gray-500">Buscando seus produtos favoritos</p>
+      <PageContainer
+        breadcrumbs={[
+          { label: 'Home', href: '/' },
+          { label: 'Wishlist', current: true }
+        ]}
+        title="My Wishlist"
+        description="Loading your favorite products..."
+      >
+        <div className="min-h-[400px] flex items-center justify-center">
+          <div className="text-center">
+            <Loader2 className="w-16 h-16 animate-spin mx-auto mb-4 text-purple-600" />
+            <h2 className="text-xl font-semibold text-gray-700 mb-2">Carregando Wishlist...</h2>
+            <p className="text-gray-500">Buscando seus produtos favoritos</p>
+          </div>
         </div>
-      </div>
+      </PageContainer>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-[600px] flex items-center justify-center">
-        <div className="text-center">
-          <Heart className="w-16 h-16 mx-auto mb-4 text-red-500" />
-          <h2 className="text-2xl font-bold text-gray-700 mb-2">Erro ao Carregar</h2>
-          <p className="text-gray-500 mb-6">{error}</p>
-          <button 
-            onClick={() => window.location.reload()}
-            className="px-6 py-3 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors"
-          >
-            Tentar Novamente
-          </button>
+      <PageContainer
+        breadcrumbs={[
+          { label: 'Home', href: '/' },
+          { label: 'Wishlist', current: true }
+        ]}
+        title="My Wishlist"
+        description="Error loading your wishlist"
+      >
+        <div className="min-h-[400px] flex items-center justify-center">
+          <div className="text-center">
+            <Heart className="w-16 h-16 mx-auto mb-4 text-red-500" />
+            <h2 className="text-2xl font-bold text-gray-700 mb-2">Erro ao Carregar</h2>
+            <p className="text-gray-500 mb-6">{error}</p>
+            <button 
+              onClick={() => window.location.reload()}
+              className="px-6 py-3 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors"
+            >
+              Tentar Novamente
+            </button>
+          </div>
         </div>
-      </div>
+      </PageContainer>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-6">
-      {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center gap-4 mb-4">
-          <Link 
-            href="/"
-            className="flex items-center gap-2 text-purple-600 hover:text-purple-700 transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            <span>Voltar</span>
-          </Link>
-        </div>
-        
-        <div className="flex items-center gap-3 mb-4">
-          <Heart className="w-8 h-8 text-purple-600" />
-          <h1 className="text-3xl font-bold text-gray-900">Minha Lista de Desejos</h1>
-        </div>
-        
-        <p className="text-gray-600">
-          {wishlistCount === 0 
-            ? 'Sua lista de desejos está vazia' 
-            : `${wishlistCount} ${wishlistCount === 1 ? 'produto' : 'produtos'} na sua lista de desejos`
-          }
-        </p>
-      </div>
+    <PageContainer
+      breadcrumbs={[
+        { label: 'Home', href: '/' },
+        { label: 'Wishlist', current: true }
+      ]}
+      title="Minha Lista de Desejos"
+      description={
+        wishlistCount === 0 
+          ? 'Sua lista de desejos está vazia' 
+          : `${wishlistCount} ${wishlistCount === 1 ? 'produto' : 'produtos'} na sua lista de desejos`
+      }
+    >
 
       {/* Empty State */}
       {wishlist.length === 0 ? (
@@ -147,6 +162,6 @@ export default function WishlistPage() {
           </Link>
         </div>
       )}
-    </div>
+    </PageContainer>
   );
 }
