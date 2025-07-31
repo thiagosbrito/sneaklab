@@ -41,6 +41,19 @@ export async function GET(
 
     const result = await getProductsByCategory(slug, filters);
 
+    // Check if category exists by looking at the query result
+    // If no products found AND the query didn't find the category, it's invalid
+    if (result.products.length === 0 && result.categoryNotFound) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Category not found',
+          message: `Category "${slug}" does not exist`,
+        },
+        { status: 404 }
+      );
+    }
+
     console.log(`✅ API: Returning ${result.products.length} products for category ${slug}`);
 
     return NextResponse.json(

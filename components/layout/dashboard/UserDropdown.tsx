@@ -19,8 +19,13 @@ export default function UserDropdown() {
   const { user } = useAuth();
 
   async function handleSignOut() {
-    await supabase.auth.signOut();
-    router.push("/admin/(auth)/sign-in");
+    try {
+      await supabase.auth.signOut();
+      // Let the auth context handle the redirect instead of manual navigation
+      // The auth state change will trigger UI updates automatically
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
   }
 
   return (

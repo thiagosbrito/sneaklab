@@ -5,15 +5,21 @@ import ProductCard from "@/components/layout/ProductCard";
 import PageContainer from "@/components/ui/PageContainer";
 import { useProducts } from "@/hooks/useProducts";
 import { Loader2, AlertCircle } from "lucide-react";
+import { notFound } from "next/navigation";
 
 const Page = ({ params }: { params: Promise<{ category: string }> }) => {
     const { category } = use(params);
-    const { products, loading, error, pagination } = useProducts({ 
+    const { products, loading, error, categoryNotFound, pagination } = useProducts({ 
         category: category,
         limit: 24,
         sortBy: 'created_at',
         sortOrder: 'desc'
     });
+
+    // Trigger 404 if category doesn't exist
+    if (!loading && categoryNotFound) {
+        notFound();
+    }
 
     if (loading) {
         return (

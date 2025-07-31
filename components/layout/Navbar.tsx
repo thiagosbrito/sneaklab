@@ -10,7 +10,7 @@ import Link from "next/link";
 import BagSidebar from "../ui/BagSidebar";
 import { AuthSidebar } from "../ui/AuthSidebar";
 import { useAuth } from "@/contexts/auth";
-import { signOutAction } from "@/app/actions";
+import useSupabaseBrowser from "@/utils/supabase/client";
 
 type Category = Database['public']['Tables']['categories']['Row'];
 
@@ -25,6 +25,7 @@ export default function Navbar({ menuItems = [] }: NavbarProps) {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const { bag, totalItems } = useBag();
     const { user, loading } = useAuth();
+    const supabase = useSupabaseBrowser();
     const dropdownRef = useRef<HTMLDivElement>(null);
 
     const handleUserAction = () => {
@@ -36,8 +37,13 @@ export default function Navbar({ menuItems = [] }: NavbarProps) {
     };
 
     const handleSignOut = async () => {
-        await signOutAction();
-        setIsUserDropdownOpen(false);
+        try {
+            await supabase.auth.signOut();
+            // Let the auth context handle the redirect
+            setIsUserDropdownOpen(false);
+        } catch (error) {
+            console.error('Error signing out:', error);
+        }
     };
 
     // Close dropdown when clicking outside

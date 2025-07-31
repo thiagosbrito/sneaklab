@@ -20,6 +20,7 @@ interface UseProductsResult {
   products: Product[];
   loading: boolean;
   error: string | null;
+  categoryNotFound?: boolean;
   pagination: {
     currentPage: number;
     totalPages: number;
@@ -33,6 +34,7 @@ export function useProducts(options: UseProductsOptions = {}): UseProductsResult
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [categoryNotFound, setCategoryNotFound] = useState<boolean>(false);
   const [pagination, setPagination] = useState({
     currentPage: 1,
     totalPages: 0,
@@ -44,6 +46,7 @@ export function useProducts(options: UseProductsOptions = {}): UseProductsResult
     try {
       setLoading(true);
       setError(null);
+      setCategoryNotFound(false);
 
       // Build query parameters
       const params = new URLSearchParams();
@@ -65,6 +68,19 @@ export function useProducts(options: UseProductsOptions = {}): UseProductsResult
 
       const response = await fetch(endpoint);
 
+      if (response.status === 404) {
+        // Category not found - this should trigger 404 page
+        setCategoryNotFound(true);
+        setProducts([]);
+        setPagination({
+          currentPage: 1,
+          totalPages: 0,
+          totalCount: 0,
+          limit: 20
+        });
+        return;
+      }
+
       if (!response.ok) {
         throw new Error(`Failed to fetch products: ${response.status}`);
       }
@@ -72,6 +88,17 @@ export function useProducts(options: UseProductsOptions = {}): UseProductsResult
       const result = await response.json();
 
       if (!result.success) {
+        if (result.error === 'Category not found') {
+          setCategoryNotFound(true);
+          setProducts([]);
+          setPagination({
+            currentPage: 1,
+            totalPages: 0,
+            totalCount: 0,
+            limit: 20
+          });
+          return;
+        }
         throw new Error(result.message || 'Failed to fetch products');
       }
 
@@ -117,6 +144,7 @@ export function useProducts(options: UseProductsOptions = {}): UseProductsResult
     products,
     loading,
     error,
+    categoryNotFound,
     pagination,
     refetch: fetchProducts
   };

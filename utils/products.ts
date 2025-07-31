@@ -7,6 +7,7 @@ export interface ProductsResult {
   totalCount: number
   currentPage: number
   totalPages: number
+  categoryNotFound?: boolean
 }
 
 export interface ProductFilters {
@@ -123,7 +124,52 @@ export async function getProductsByCategory(
   categorySlug: string, 
   options: Omit<ProductFilters, 'categorySlug'> = {}
 ): Promise<ProductsResult> {
-  return getProducts({ ...options, categorySlug })
+  const supabase = createBrowserClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+
+  try {
+    // First check if the category exists
+    const { data: categoryData, error: categoryError } = await supabase
+      .from('categories')
+      .select('id, name, slug')
+      .eq('slug', categorySlug)
+      .single()
+
+    if (categoryError && categoryError.code === 'PGRST116') {
+      // Category not found
+      return {
+        products: [],
+        totalCount: 0,
+        currentPage: options.page || 1,
+        totalPages: 0,
+        categoryNotFound: true
+      }
+    }
+
+    if (categoryError) {
+      throw categoryError
+    }
+
+    // Category exists, get products
+    const result = await getProducts({ ...options, categorySlug })
+    
+    return {
+      ...result,
+      categoryNotFound: false
+    }
+
+  } catch (error) {
+    console.error('❌ Error in getProductsByCategory:', error)
+    return {
+      products: [],
+      totalCount: 0,
+      currentPage: options.page || 1,
+      totalPages: 0,
+      categoryNotFound: true
+    }
+  }
 }
 
 export async function getProductById(id: string): Promise<Product | null> {

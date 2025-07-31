@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import useSupabaseBrowser from '@/utils/supabase/client';
+import { useRouter, usePathname } from 'next/navigation';
 
 interface AuthContextType {
   user: User | null;
@@ -25,6 +26,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const supabase = useSupabaseBrowser();
+  const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     // Get initial session
@@ -40,11 +43,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+
+        // Handle logout redirect
+        if (event === 'SIGNED_OUT') {
+          // If user was on admin pages, redirect to admin sign-in
+          if (pathname?.startsWith('/admin')) {
+            router.push('/admin/(auth)/sign-in');
+          } else {
+            // Otherwise redirect to home page
+            router.push('/');
+          }
+        }
       }
     );
 
     return () => subscription.unsubscribe();
-  }, [supabase]);
+  }, [supabase, router, pathname]);
 
   return (
     <AuthContext.Provider value={{

@@ -1,0 +1,208 @@
+{
+  "name": "SneakLab WhatsApp Order Notifications",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "whatsapp-notifications",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-start",
+      "name": "Order Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "webhookId": "whatsapp-notifications"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "event-type-check",
+              "leftValue": "={{ $json.event_type }}",
+              "rightValue": "order_status_changed",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "status-check",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "confirmed,ready",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "status-filter",
+      "name": "Should Send WhatsApp?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Format WhatsApp message based on order status\nconst orderData = $input.first().json.order_data;\nconst customerData = $input.first().json.customer_data;\nconst status = $input.first().json.status;\n\n// Helper function to format order items\nfunction formatOrderItems(items) {\n  if (!items || items.length === 0) {\n    return 'Custom sneaker order';\n  }\n  \n  return items.map(item => {\n    const customization = item.customization_details \n      ? Object.entries(item.customization_details)\n          .map(([key, value]) => `${key}: ${value}`)\n          .join(', ')\n      : '';\n    const customText = customization ? ` (${customization})` : '';\n    const productName = item.products?.name || 'Custom Item';\n    return `• ${productName}${customText} - $${item.item_total}`;\n  }).join('\\n');\n}\n\n// Format confirmation message\nfunction formatConfirmationMessage(order, customer) {\n  const itemsList = formatOrderItems(order.order_items);\n  const orderRef = order.id.slice(0, 8).toUpperCase();\n  \n  return `🎉 *Order Confirmed - SneakLab*\n\nHey ${customer.name}! \n\nGreat news! We've reviewed your custom order #${orderRef} and it's totally doable! 💪\n\n*Your Custom Items:*\n${itemsList}\n\n*Total: $${order.total_amount}*\n\nWe're starting work on your custom sneakers right now. Our team will craft them with love and attention to detail.\n\n*Delivery:* Hand delivery to your address\n*Payment:* Cash on delivery\n\nWe'll message you here when your sneakers are ready for pickup! \n\nQuestions? Just reply! 👟✨`;\n}\n\n// Format ready message\nfunction formatReadyMessage(order, customer) {\n  const addressString = typeof customer.address === 'object' \n    ? `${customer.address.street}\\n${customer.address.city}, ${customer.address.state} ${customer.address.zip}`\n    : customer.address || 'Address on file';\n  \n  const orderRef = order.id.slice(0, 8).toUpperCase();\n  \n  return `🎊 *Your Custom Sneakers Are Ready!*\n\nHi ${customer.name}! \n\nYour custom order #${orderRef} is complete and ready for delivery! 🔥\n\n*Total Amount: $${order.total_amount}*\n*Payment: Cash on delivery*\n\n*Delivery Address:*\n${addressString}\n\nOur team will contact you shortly to arrange the hand delivery. Please have the exact amount ready.\n\nCan't wait for you to see your custom kicks! 👟🎨\n\nReply here if you need to change anything!`;\n}\n\n// Generate message based on status\nlet message;\nif (status === 'confirmed') {\n  message = formatConfirmationMessage(orderData, customerData);\n} else if (status === 'ready') {\n  message = formatReadyMessage(orderData, customerData);\n} else {\n  throw new Error(`Unsupported status: ${status}`);\n}\n\n// Clean phone number (remove any non-numeric characters except +)\nconst cleanPhone = customerData.phone ? customerData.phone.replace(/[^\\d+]/g, '') : null;\n\nif (!cleanPhone) {\n  throw new Error('Customer phone number is required');\n}\n\nreturn {\n  messaging_product: \"whatsapp\",\n  to: cleanPhone,\n  type: \"text\",\n  text: { body: message },\n  // Additional data for logging\n  order_id: orderData.id,\n  customer_name: customerData.name,\n  status: status\n};"
+      },
+      "id": "format-message",
+      "name": "Format WhatsApp Message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 180]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ \"https://graph.facebook.com/v18.0/\" + $vars.WHATSAPP_PHONE_NUMBER_ID + \"/messages\" }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ \"Bearer \" + $vars.WHATSAPP_ACCESS_TOKEN }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "messaging_product",
+              "value": "={{ $json.messaging_product }}"
+            },
+            {
+              "name": "to",
+              "value": "={{ $json.to }}"
+            },
+            {
+              "name": "type",
+              "value": "={{ $json.type }}"
+            },
+            {
+              "name": "text",
+              "value": "={{ $json.text }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "send-whatsapp",
+      "name": "Send WhatsApp Message",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [900, 180]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"success\": true, \"message\": \"WhatsApp notification sent\", \"order_id\": $json.order_id, \"customer\": $json.customer_name, \"status\": $json.status } }}"
+      },
+      "id": "success-response",
+      "name": "Success Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1120, 180]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"success\": false, \"message\": \"No WhatsApp notification needed\", \"reason\": \"Status not confirmed or ready\" } }}",
+        "options": {}
+      },
+      "id": "skip-response",
+      "name": "Skip Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [680, 400]
+    }
+  ],
+  "connections": {
+    "Order Webhook": {
+      "main": [
+        [
+          {
+            "node": "Should Send WhatsApp?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Should Send WhatsApp?": {
+      "main": [
+        [
+          {
+            "node": "Format WhatsApp Message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Skip Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format WhatsApp Message": {
+      "main": [
+        [
+          {
+            "node": "Send WhatsApp Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send WhatsApp Message": {
+      "main": [
+        [
+          {
+            "node": "Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "id": "whatsapp-notifications",
+  "tags": [
+    {
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z",
+      "id": "sneaklab",
+      "name": "sneaklab"
+    }
+  ]
+}

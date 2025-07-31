@@ -1,9 +1,8 @@
 import { useState } from 'react'
-import { createClient } from '@supabase/supabase-js'
-import { createOrder, updateUserProfile, type CreateOrderData } from '@/utils/orders'
+import type { CreateOrderData } from '@/utils/orders'
 
 // Example component showing how to create an order
-export function CreateOrderForm({ supabase }: { supabase: ReturnType<typeof createClient> }) {
+export function CreateOrderForm() {
   const [loading, setLoading] = useState(false)
   const [orderData, setOrderData] = useState<CreateOrderData>({
     items: [{
@@ -40,21 +39,34 @@ export function CreateOrderForm({ supabase }: { supabase: ReturnType<typeof crea
 
     setLoading(true)
     try {
-      // First, update user profile with contact info
-      await updateUserProfile(supabase, profileData)
+      // Use the new centralized API route
+      const response = await fetch('/api/orders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          orderData,
+          profileData
+        })
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to create order')
+      }
+
+      const result = await response.json()
       
-      // Then create the order
-      const order = await createOrder(supabase, orderData)
-      
-      alert(`Order created successfully! Order ID: ${order.id}`)
-      console.log('Order created:', order)
+      alert(`Order created successfully! Order ID: ${result.order.id}`)
+      console.log('Order created:', result.order)
       
       // Order is now in 'pending' status
-      // Admin can later change to 'confirmed' to trigger WhatsApp
+      // Admin can later change to 'confirmed' to trigger WhatsApp via n8n
       
     } catch (error) {
       console.error('Error creating order:', error)
-      alert('Failed to create order. Please try again.')
+      alert(`Failed to create order: ${error.message}`)
     } finally {
       setLoading(false)
     }

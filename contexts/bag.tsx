@@ -31,25 +31,30 @@ export const BagProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const { user } = useAuth();
     const supabase = useSupabaseBrowser();
 
+    // Reset initialization when user changes (login/logout/switch users)
+    useEffect(() => {
+        setIsInitialized(false);
+    }, [user?.id]);
+
     // Load bag from localStorage on mount, then sync with Supabase if authenticated
     useEffect(() => {
         const loadInitialBag = async () => {
             setIsLoading(true);
             try {
-                // Always start with localStorage as source of truth
-                const savedBag = localStorage.getItem('sneaklab-shopping-bag');
-                const localBag = savedBag ? JSON.parse(savedBag) : [];
-                setBag(localBag);
-
-                // If user is authenticated, try to sync with Supabase
                 if (user) {
+                    // For authenticated users, use user-specific localStorage key
+                    const userBagKey = `sneaklab-shopping-bag-${user.id}`;
+                    const savedBag = localStorage.getItem(userBagKey);
+                    const localBag = savedBag ? JSON.parse(savedBag) : [];
+                    setBag(localBag);
+
                     try {
                         const supabaseBag = await loadBagFromSupabase(supabase, user.id);
                         
                         if (supabaseBag.length > 0 && localBag.length === 0) {
                             // User has a bag in Supabase but not locally, use Supabase data
                             setBag(supabaseBag);
-                            localStorage.setItem('sneaklab-shopping-bag', JSON.stringify(supabaseBag));
+                            localStorage.setItem(userBagKey, JSON.stringify(supabaseBag));
                         } else if (localBag.length > 0) {
                             // User has local bag, sync it to Supabase
                             await syncBagToSupabase(supabase, user.id, localBag);
@@ -58,9 +63,13 @@ export const BagProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                         console.log('Supabase sync failed, continuing with localStorage:', supabaseError);
                         // Continue with localStorage data, Supabase is just backup
                     }
+                } else {
+                    // For unauthenticated users, use anonymous bag (clear it when they log out)
+                    setBag([]);
                 }
             } catch (error) {
                 console.error('Error loading bag:', error);
+                setBag([]);
             }
             setIsLoading(false);
             setIsInitialized(true);
@@ -76,12 +85,15 @@ export const BagProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         if (!isInitialized) return; // Don't sync during initial load
         
         try {
-            localStorage.setItem('sneaklab-shopping-bag', JSON.stringify(bag));
-            
-            // Sync to Supabase if user is authenticated
             if (user) {
+                // Save to user-specific localStorage key
+                const userBagKey = `sneaklab-shopping-bag-${user.id}`;
+                localStorage.setItem(userBagKey, JSON.stringify(bag));
+                
+                // Sync to Supabase if user is authenticated
                 syncBagToSupabase(supabase, user.id, bag);
             }
+            // Don't save anonymous bags to localStorage
         } catch (error) {
             console.error('Error saving bag:', error);
         }

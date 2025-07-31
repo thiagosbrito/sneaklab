@@ -1,0 +1,24 @@
+# fly.toml app configuration file generated for n8n-posta on 2025-07-23T22:35:08+02:00
+
+app = 'n8n-sneaklab'
+primary_region = 'mia'
+
+[build]
+  image = 'n8nio/n8n'
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = 'stop'
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ['app']
+
+[[vm]]
+  memory = '1gb'
+  cpu_kind = 'shared'
+  cpus = 1
+
+[mounts]
+  source = "n8n_data"
+  destination = "/home/node/.n8n"
