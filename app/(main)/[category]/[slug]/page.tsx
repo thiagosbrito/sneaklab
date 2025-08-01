@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, use, useEffect } from "react";
-import { useProduct, useProducts } from "@/hooks/useProducts";
+import { useProductState, useProductsState } from "@/hooks/queries";
 import { useWishlist } from "@/hooks/useWishlist";
+import type { Product } from "@/utils/models/products";
+import type { ProductWithRelations } from "@/lib/api-types";
 import { 
   Loader2, 
   AlertCircle, 
@@ -22,9 +24,21 @@ import QuantitySelector from "@/components/ui/QuantitySelector";
 import ProductCard from "@/components/layout/ProductCard";
 import PageContainer from "@/components/ui/PageContainer";
 
+// Helper function to transform ProductWithRelations to old Product format
+function transformProductForLegacyComponents(product: ProductWithRelations): Product {
+    return {
+        ...product,
+        brandName: product.brand?.name,
+        brandLogo: product.brand?.logo,
+        category: product.category?.slug,
+        categoryName: product.category?.name,
+        imageUrl: product.imageURL || [],
+    };
+}
+
 export default function ProductPage({ params }: { params: Promise<{ slug: string, category: string }> }) {
     const { slug, category } = use(params);
-    const { product, loading, error } = useProduct(slug);
+    const { product, loading, error } = useProductState(slug); // slug is actually the product ID
     const { toggleWishlist, checkIsInWishlist } = useWishlist();
     const [selectedSize, setSelectedSize] = useState<string>('');
     const [quantity, setQuantity] = useState(1);
@@ -32,7 +46,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
     const [wishlistLoading, setWishlistLoading] = useState(false);
     
     // Fetch related products
-    const { products: relatedProducts } = useProducts({
+    const { products: relatedProducts } = useProductsState({
         category: category,
         limit: 4,
         sortBy: 'created_at',
@@ -120,7 +134,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                 {/* Product Images - Takes up 7/12 columns for more space */}
                 <div className="lg:col-span-7">
                     <ProductImageCarousel 
-                        images={product.imageUrl || []} 
+                        images={product.imageURL || []}
                         productName={product.name}
                     />
                 </div>
@@ -131,17 +145,17 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                             <div className="mb-6">
                                 <div className="flex items-start justify-between mb-4">
                                     <div>
-                                        {product.brandName && (
+                                        {product.brand?.name && (
                                             <p className="text-purple-600 font-medium text-sm uppercase tracking-wide mb-2">
-                                                {product.brandName}
+                                                {product.brand.name}
                                             </p>
                                         )}
                                         <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
                                             {product.name}
                                         </h1>
-                                        {product.categoryName && (
+                                        {product.category?.name && (
                                             <p className="text-gray-600 text-sm">
-                                                {product.categoryName}
+                                                {product.category.name}
                                             </p>
                                         )}
                                     </div>
@@ -222,7 +236,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                             {/* Add to Bag */}
                             <div className="mb-8">
                                 <AddToBagButton 
-                                    product={{...product}}
+                                    product={transformProductForLegacyComponents(product)}
                                     showText={true}
                                     className="w-full justify-center py-4 text-lg font-semibold"
                                 />
@@ -262,10 +276,10 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                         {relatedProducts
-                            .filter(p => p.id !== product?.id)
+                            .filter((p: ProductWithRelations) => p.id !== product?.id)
                             .slice(0, 4)
-                            .map((relatedProduct) => (
-                            <ProductCard key={relatedProduct.id} product={relatedProduct} />
+                            .map((relatedProduct: ProductWithRelations) => (
+                            <ProductCard key={relatedProduct.id} product={transformProductForLegacyComponents(relatedProduct)} />
                         ))}
                     </div>
                 </div>

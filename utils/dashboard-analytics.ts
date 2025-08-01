@@ -1,10 +1,10 @@
-import { Order, Product, OrderItem, Profile } from '@/db/schema'
+import { Order, Product, OrderItem, Profile, CustomerAddress } from '@/db/schema'
 
 export type OrderWithUserDetails = Order & {
   customer_name: string | null
   customer_email: string | null
   customer_phone: string | null
-  customer_address: any
+  customer_address: CustomerAddress | null
 }
 
 interface DailyStatsRecord {

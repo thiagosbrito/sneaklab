@@ -7,8 +7,7 @@ import { useLoginDialog } from "@/contexts/loginDialog";
 import Swal from "sweetalert2";
 import Link from "next/link";
 import Image from "next/image";
-import { useCategoryName } from "@/hooks/useCategoryName";
-import { useBrandName } from "@/hooks/useBrandName";
+import { useCategoryName, useBrandName } from "@/hooks/queries";
 
 export default function ProductCard({ product }: { product: Product }) {
     const { addToBag, getBagItemQuantity, isInBag } = useBag();
@@ -38,7 +37,7 @@ export default function ProductCard({ product }: { product: Product }) {
         }
         addToBag(product);
     };
-    const { categoryName } = useCategoryName(product.categoryID);
+    const { categoryName, loading: categoryLoading } = useCategoryName(product.categoryID);
     const { brandName, loading: brandLoading } = useBrandName(product.brandID);
     const productUrl = `/${categoryName}/${product.id}`;
 

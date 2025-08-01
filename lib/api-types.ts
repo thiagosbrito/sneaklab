@@ -15,7 +15,7 @@ import type {
 } from '@/db/schema'
 
 // Base API response wrapper
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   data?: T
   error?: string
   message?: string
@@ -55,6 +55,7 @@ export interface ProductFilters {
   search?: string
   sortBy?: 'name' | 'price' | 'created_at'
   sortOrder?: 'asc' | 'desc'
+  [key: string]: string | number | boolean | null | undefined
 }
 
 export interface BestsellersResponse extends ApiResponse<BestsellerProduct[]> {}
@@ -116,10 +117,10 @@ export interface AdminOrderFilters {
 export interface ApiErrorResponse {
   error: string
   message?: string
-  details?: any
+  details?: Record<string, unknown>
 }
 
 // Mutation response types
-export interface MutationResponse<T = any> extends ApiResponse<T> {
+export interface MutationResponse<T = unknown> extends ApiResponse<T> {
   success: boolean
 }

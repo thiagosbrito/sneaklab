@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api-client';
+import { apiClient, ApiError } from '@/lib/api-client';
 import type { CategoriesResponse } from '@/lib/api-types';
 
 // All categories hook
@@ -51,7 +51,7 @@ export function useCategoryBySlug(slug: string) {
     enabled: !!slug,
     staleTime: 30 * 60 * 1000, // 30 minutes
     gcTime: 60 * 60 * 1000,    // 1 hour
-    retry: (failureCount, error: any) => {
+    retry: (failureCount, error: ApiError) => {
       // Don't retry on 404 (category not found)
       if (error?.status === 404) return false;
       return failureCount < 2;

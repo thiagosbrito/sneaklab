@@ -5,6 +5,8 @@ import { db } from '@/db'
 import { orders, orderItems, profiles } from '@/db/schema'
 import { eq, desc } from 'drizzle-orm'
 
+type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
+
 // Environment variables for n8n integration
 const N8N_WEBHOOK_URL = process.env.N8N_WEBHOOK_URL
 const N8N_API_KEY = process.env.N8N_API_KEY
@@ -15,11 +17,11 @@ interface N8nWebhookPayload {
   status: string
   previous_status?: string
   timestamp: string
-  order_data: any
+  order_data: Record<string, unknown>
   customer_data?: {
     name: string
     phone: string
-    address: any
+    address: Json
     email?: string
   }
 }
@@ -79,7 +81,7 @@ export async function POST(request: NextRequest) {
       profileData?: {
         full_name?: string
         phone?: string
-        address?: any
+        address?: Json
       }
     } = body
 
@@ -316,7 +318,7 @@ export async function PATCH(request: NextRequest) {
           customer_data: {
             name: orderWithDetails.customer_name || 'Customer',
             phone: orderWithDetails.customer_phone || '',
-            address: orderWithDetails.customer_address || '',
+            address: orderWithDetails.customer_address as Json,
             email: orderWithDetails.customer_email ?? undefined
           }
         })

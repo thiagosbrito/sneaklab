@@ -95,7 +95,7 @@ export class ApiClient {
 export const apiClient = new ApiClient('/api')
 
 // Helper function to build query strings from objects
-export function buildQueryString(params: Record<string, any>): string {
+export function buildQueryString(params: Record<string, string | number | boolean | null | undefined>): string {
   const searchParams = new URLSearchParams()
   
   Object.entries(params).forEach(([key, value]) => {

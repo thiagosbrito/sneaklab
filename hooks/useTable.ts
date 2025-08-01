@@ -13,7 +13,7 @@ interface FilterOption {
   value: string
 }
 
-export function useTable<T extends Record<string, any>>({
+export function useTable<T extends Record<string, unknown>>({
   data,
   searchFields = [],
   initialItemsPerPage = 10

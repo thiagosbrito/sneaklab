@@ -12,7 +12,10 @@ export function CreateOrderForm() {
       customization_details: {
         size: '10',
         color: 'red',
-        design: 'custom logo'
+        personalizations: [{
+          type: 'design',
+          value: 'custom logo'
+        }]
       },
       customization_fee: 50
     }],

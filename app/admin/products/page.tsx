@@ -110,14 +110,17 @@ export default function ProductsPage() {
       key: 'imageURL',
       label: 'Image',
       width: 'w-16',
-      render: (imageURL: string[] | null) => (
-        <ImageWithFallback
-          src={imageURL && imageURL[0] ? imageURL[0] : ''}
-          alt="Product"
-          className="w-full h-full object-cover rounded-lg"
-          fallback={<Package className="w-6 h-6 text-gray-400" />}
-        />
-      )
+      render: (value: unknown, item: Product) => {
+        const imageURL = value as string[] | null
+        return (
+          <ImageWithFallback
+            src={imageURL && imageURL[0] ? imageURL[0] : ''}
+            alt="Product"
+            className="w-full h-full object-cover rounded-lg"
+            fallback={<Package className="w-6 h-6 text-gray-400" />}
+          />
+        )
+      }
     },
     {
       key: 'name',
@@ -127,65 +130,81 @@ export default function ProductsPage() {
     {
       key: 'description',
       label: 'Description',
-      render: (description: string | null) => (
-        <span className="max-w-xs truncate" title={description || ''}>
-          {description || '-'}
-        </span>
-      )
+      render: (value: unknown, item: Product) => {
+        const description = value as string | null
+        return (
+          <span className="text-sm text-gray-600 max-w-xs truncate">
+            {description || 'No description'}
+          </span>
+        )
+      }
     },
     {
       key: 'brandID',
       label: 'Brand',
-      render: (brandID: string | null) => (
-        <span className="text-sm text-gray-900">
-          {getBrandName(brandID)}
-        </span>
-      )
+      render: (value: unknown, item: Product) => {
+        const brandID = value as string | null
+        return (
+          <span className="text-sm">
+            {brands.find(b => b.id === brandID)?.name || 'No brand'}
+          </span>
+        )
+      }
     },
     {
       key: 'categoryID',
       label: 'Category',
-      render: (categoryID: string | null) => (
-        <span className="text-sm text-gray-900">
-          {getCategoryName(categoryID)}
-        </span>
-      )
+      render: (value: unknown, item: Product) => {
+        const categoryID = value as string | null
+        return (
+          <span className="text-sm text-gray-900">
+            {getCategoryName(categoryID)}
+          </span>
+        )
+      }
     },
     {
       key: 'price',
       label: 'Price',
-      render: (price: number, product: Product) => (
-        <div className="flex flex-col">
-          {product.promoPrice ? (
-            <>
-              <span className="text-sm line-through text-gray-500">${price}</span>
-              <span className="text-sm font-medium text-green-600">${product.promoPrice}</span>
-            </>
-          ) : (
-            <span className="text-sm font-medium">${price}</span>
-          )}
-        </div>
-      )
+      render: (value: unknown, item: Product) => {
+        const price = value as number | null
+        return (
+          <div className="flex flex-col">
+            {item.promoPrice ? (
+              <>
+                <span className="text-sm line-through text-gray-500">${price}</span>
+                <span className="text-sm font-medium text-green-600">${item.promoPrice}</span>
+              </>
+            ) : (
+              <span className="text-sm font-medium">${price}</span>
+            )}
+          </div>
+        )
+      }
     },
     {
       key: 'isAvailable',
       label: 'Status',
-      render: (isAvailable: boolean) => (
-        <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-          isAvailable 
-            ? 'bg-green-100 text-green-800' 
-            : 'bg-red-100 text-red-800'
-        }`}>
-          {isAvailable ? 'Available' : 'Unavailable'}
-        </span>
-      )
+      render: (value: unknown, item: Product) => {
+        const isAvailable = value as boolean
+        return (
+          <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
+            isAvailable 
+              ? 'bg-green-100 text-green-800' 
+              : 'bg-red-100 text-red-800'
+          }`}>
+            {isAvailable ? 'Available' : 'Unavailable'}
+          </span>
+        )
+      }
     },
     {
       key: 'created_at',
       label: 'Created',
-      render: (created_at: string | null) => (
-        created_at ? new Date(created_at).toLocaleDateString() : '-'
-      )
+      render: (value: unknown, item: Product) => {
+        const created_at = value as string | null
+        return created_at ? new Date(created_at).toLocaleDateString() : '-'
+      }
     },
     {
       key: 'actions',

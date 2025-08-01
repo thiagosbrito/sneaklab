@@ -3,7 +3,7 @@ import { ReactNode } from 'react'
 export interface Column<T> {
   key: keyof T | string
   label: string
-  render?: (value: any, item: T) => ReactNode
+  render?: (value: unknown, item: T) => ReactNode
   sortable?: boolean
   width?: string
 }
@@ -16,7 +16,7 @@ interface DataTableProps<T> {
   onRowClick?: (item: T) => void
 }
 
-export default function DataTable<T extends Record<string, any>>({
+export default function DataTable<T extends Record<string, unknown> & { id?: string | number }>({
   data,
   columns,
   loading = false,
@@ -74,12 +74,15 @@ export default function DataTable<T extends Record<string, any>>({
                 {columns.map((column) => {
                   const columnKey = String(column.key)
                   const value = columnKey.includes('.') 
-                    ? columnKey.split('.').reduce((obj: any, key: string) => obj?.[key], item)
+                    ? columnKey.split('.').reduce((obj: unknown, key: string) => 
+                        (obj && typeof obj === 'object' && key in obj) ? (obj as Record<string, unknown>)[key] : undefined, item)
                     : item[column.key]
                   
                   return (
                     <td key={String(column.key)} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {column.render ? column.render(value, item) : value || '-'}
+                      {column.render ? column.render(value, item) : (
+                        typeof value === 'string' || typeof value === 'number' ? value : '-'
+                      )}
                     </td>
                   )
                 })}

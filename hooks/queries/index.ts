@@ -35,3 +35,11 @@ export {
   useHeroSectionState,
   useShowcaseSectionState
 } from './useContent';
+
+// Lookup queries
+export {
+  useBrand,
+  useBrandName,
+  useCategoryName,
+  useProductDisplayNames
+} from './useLookups';

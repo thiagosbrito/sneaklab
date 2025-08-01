@@ -1,7 +1,12 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Profile } from '@/db/schema'
+import { Profile, CustomerAddress } from '@/db/schema'
+
+// Form data type for customer editing
+type CustomerFormData = Pick<Profile, 'fullName' | 'phone'> & {
+  address: CustomerAddress
+}
 import { useTable } from '@/hooks/useTable'
 import TableHeader from '@/components/ui/TableHeader'
 import DataTable, { Column } from '@/components/ui/DataTable'
@@ -10,13 +15,13 @@ import Sidebar from '@/components/ui/Sidebar'
 import { Edit, Trash2, Eye, Phone, Mail, MapPin, Calendar, Package, DollarSign, User } from 'lucide-react'
 
 // Using Drizzle schema types
-
 interface CustomerData extends Profile {
   email?: string
   order_count: number
   total_spent: number
   last_order_date?: string
   first_order_date?: string
+  [key: string]: unknown // Add index signature for useTable compatibility
 }
 
 export default function CustomersPage() {
@@ -78,8 +83,8 @@ export default function CustomersPage() {
   // Apply additional filtering for order status
   const hasOrdersFilter = getFilterValue('hasOrders')
   const finalFilteredData = filteredData.filter(customer => {
-    if (hasOrdersFilter === 'with-orders') return customer.order_count > 0
-    if (hasOrdersFilter === 'without-orders') return customer.order_count === 0
+    if (hasOrdersFilter === 'with-orders') return (customer.order_count as number) > 0
+    if (hasOrdersFilter === 'without-orders') return (customer.order_count as number) === 0
     return true
   })
 
@@ -228,7 +233,7 @@ export default function CustomersPage() {
     */
   }
 
-  const handleSaveCustomer = async (formData: any) => {
+  const handleSaveCustomer = async (formData: CustomerFormData) => {
     // TODO: Implement with Drizzle API routes
     alert('Customer save functionality needs to be implemented with Drizzle API routes')
     setSidebarOpen(false)
@@ -263,7 +268,7 @@ export default function CustomersPage() {
     */
   }
 
-  const formatAddress = (address: any) => {
+  const formatAddress = (address: CustomerAddress | null) => {
     if (!address || typeof address !== 'object') return 'No address'
     
     const parts = []
@@ -437,7 +442,7 @@ function CustomerForm({
   onCancel 
 }: { 
   customer: CustomerData | null
-  onSave: (data: any) => void
+  onSave: (data: CustomerFormData) => void
   onCancel: () => void 
 }) {
   const [formData, setFormData] = useState({
@@ -461,7 +466,7 @@ function CustomerForm({
     }))
   }
 
-  const address = formData.address as any || {}
+  const address = formData.address as CustomerAddress || {}
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -548,7 +553,7 @@ function CustomerForm({
 }
 
 // Helper function to format address (moved outside component to avoid recreation)
-function formatAddress(address: any) {
+function formatAddress(address: CustomerAddress | null) {
   if (!address || typeof address !== 'object') return 'No address'
   
   const parts = []

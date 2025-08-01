@@ -68,7 +68,7 @@ export const AuthSidebar: React.FC<AuthSidebarProps> = ({ isOpen, onClose }) => 
           onClose();
         }
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError('An unexpected error occurred');
     }
     

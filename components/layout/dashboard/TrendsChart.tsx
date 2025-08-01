@@ -28,12 +28,24 @@ export default function TrendsChart({ dailyStats, topProducts }: TrendsChartProp
   }))
 
   // Custom tooltip for the chart
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({ active, payload, label }: {
+    active?: boolean;
+    payload?: Array<{
+      color: string;
+      dataKey: string;
+      value: number;
+    }>;
+    label?: string;
+  }) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
           <p className="text-sm font-medium text-gray-900">{label}</p>
-          {payload.map((entry: any, index: number) => (
+          {payload.map((entry: {
+            color: string;
+            dataKey: string;
+            value: number;
+          }, index: number) => (
             <p key={index} className="text-sm" style={{ color: entry.color }}>
               {entry.dataKey === 'orders' ? 'Orders' : 'Revenue'}: {' '}
               {entry.dataKey === 'revenue' 

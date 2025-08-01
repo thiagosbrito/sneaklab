@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from '@tanstack/react-query';
-import { apiClient, buildQueryString } from '@/lib/api-client';
+import { apiClient, buildQueryString, ApiError } from '@/lib/api-client';
 import type { 
   ProductsResponse, 
   ProductFilters, 
@@ -26,7 +26,7 @@ export function useProducts(filters: ProductFilters = {}) {
     },
     staleTime: 5 * 60 * 1000, // 5 minutes - products don't change frequently
     gcTime: 10 * 60 * 1000,   // 10 minutes
-    retry: (failureCount, error: any) => {
+    retry: (failureCount, error: ApiError) => {
       // Don't retry on 404 (category not found)
       if (error?.status === 404) return false;
       return failureCount < 2;
@@ -44,7 +44,7 @@ export function useProduct(id: string) {
     enabled: !!id,
     staleTime: 10 * 60 * 1000, // 10 minutes - individual products change less frequently
     gcTime: 30 * 60 * 1000,    // 30 minutes
-    retry: (failureCount, error: any) => {
+    retry: (failureCount, error: ApiError) => {
       // Don't retry on 404 (product not found)
       if (error?.status === 404) return false;
       return failureCount < 2;
@@ -65,7 +65,7 @@ export function useProductsByCategory(categorySlug: string, filters: Omit<Produc
     enabled: !!categorySlug,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000,   // 10 minutes
-    retry: (failureCount, error: any) => {
+    retry: (failureCount, error: ApiError) => {
       // Don't retry on 404 (category not found)
       if (error?.status === 404) return false;
       return failureCount < 2;
