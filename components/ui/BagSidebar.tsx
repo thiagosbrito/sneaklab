@@ -35,7 +35,7 @@ const BagSidebar: React.FC<BagSidebarProps> = ({ isOpen, onClose }) => {
                     {/* Header */}
                     <div className="flex items-center justify-between p-4 border-b dark:border-gray-700">
                         <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                            Shopping Bag ({totalItems} items)
+                            Shopping Bag ({totalItems} ite{totalItems > 1 ? 'ns' : 'm'})
                         </h2>
                         <button
                             onClick={onClose}
@@ -70,7 +70,7 @@ const BagSidebar: React.FC<BagSidebarProps> = ({ isOpen, onClose }) => {
                                                 {item.name}
                                             </h3>
                                             <p className="text-sm text-gray-500 dark:text-gray-400">
-                                                ${item.price}
+                                                R$ {item.price}
                                             </p>
                                             
                                             <div className="flex items-center justify-between mt-2">
@@ -114,18 +114,18 @@ const BagSidebar: React.FC<BagSidebarProps> = ({ isOpen, onClose }) => {
                         <div className="border-t dark:border-gray-700 p-4 space-y-4">
                             <div className="flex justify-between items-center">
                                 <span className="text-lg font-semibold text-gray-900 dark:text-white">
-                                    Total: ${totalPrice.toFixed(2)}
+                                    Total: R$ {totalPrice.toFixed(2)}
                                 </span>
                                 <button
                                     onClick={clearBag}
                                     className="text-sm text-red-500 hover:text-red-700"
                                 >
-                                    Clear All
+                                    Limpar Bag
                                 </button>
                             </div>
                             
                             <button className="w-full bg-black text-white py-3 rounded-lg hover:bg-gray-800 transition-colors">
-                                Checkout
+                                Fechar Pedido
                             </button>
                         </div>
                     )}
