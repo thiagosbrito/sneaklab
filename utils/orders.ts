@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { CustomizationDetails } from '@/db/schema'
 
 // Order creation utilities for SneakLab app
 export interface CreateOrderData {
@@ -6,7 +7,7 @@ export interface CreateOrderData {
     product_id?: string
     quantity: number
     base_price: number
-    customization_details: any
+    customization_details: CustomizationDetails
     customization_fee?: number
   }>
   notes?: string
@@ -16,7 +17,7 @@ export interface OrderItem {
   product_id?: string
   quantity: number
   base_price: number
-  customization_details: any
+  customization_details: CustomizationDetails
   customization_fee: number
   item_total: number
 }

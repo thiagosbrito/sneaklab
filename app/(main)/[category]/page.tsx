@@ -3,13 +3,27 @@
 import { use } from "react";
 import ProductCard from "@/components/layout/ProductCard";
 import PageContainer from "@/components/ui/PageContainer";
-import { useProducts } from "@/hooks/useProducts";
+import { useProductsState } from "@/hooks/queries";
 import { Loader2, AlertCircle } from "lucide-react";
 import { notFound } from "next/navigation";
+import type { Product } from "@/utils/models/products";
+import type { ProductWithRelations } from "@/lib/api-types";
+
+// Helper function to transform ProductWithRelations to old Product format
+function transformProductForLegacyComponents(product: ProductWithRelations): Product {
+    return {
+        ...product,
+        brandName: product.brand?.name,
+        brandLogo: product.brand?.logo,
+        category: product.category?.slug,
+        categoryName: product.category?.name,
+        imageUrl: product.imageURL || [],
+    };
+}
 
 const Page = ({ params }: { params: Promise<{ category: string }> }) => {
     const { category } = use(params);
-    const { products, loading, error, categoryNotFound, pagination } = useProducts({ 
+    const { products, loading, error, categoryNotFound, pagination } = useProductsState({ 
         category: category,
         limit: 24,
         sortBy: 'created_at',
@@ -80,18 +94,18 @@ const Page = ({ params }: { params: Promise<{ category: string }> }) => {
                 { label: 'Home', href: '/' },
                 { label: category, current: true }
             ]}
-            title={products[0]?.categoryName || category}
-            description={`Discover our collection of ${pagination.totalCount} amazing ${category} products`}
+            title={category}
+            description={`Discover our collection of ${pagination.totalItems} amazing ${category} products`}
         >
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
-                {products.map((product) => (
-                    <ProductCard key={product.id} product={product} />   
+                {products.map((product: ProductWithRelations) => (
+                    <ProductCard key={product.id} product={transformProductForLegacyComponents(product)} />   
                 ))}
             </div>
 
             {pagination.totalPages > 1 && (
                 <div className="text-center text-gray-500">
-                    <p>Showing {products.length} of {pagination.totalCount} products</p>
+                    <p>Showing {products.length} of {pagination.totalItems} products</p>
                     <p className="text-sm mt-1">
                         Page {pagination.currentPage} of {pagination.totalPages}
                     </p>

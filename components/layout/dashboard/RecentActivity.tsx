@@ -16,7 +16,15 @@ export default function RecentActivity({ ordersByStatus }: RecentActivityProps) 
   const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6']
 
   // Custom tooltip
-  const CustomTooltip = ({ active, payload }: any) => {
+  const CustomTooltip = ({ active, payload }: {
+    active?: boolean;
+    payload?: Array<{
+      color: string;
+      dataKey: string;
+      value: number;
+      payload: OrderStatus;
+    }>;
+  }) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload
       return (

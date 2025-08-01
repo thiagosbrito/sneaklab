@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Order, OrderItem } from '@/db/schema'
+import { Order, OrderItem, CustomizationDetails, CustomerAddress } from '@/db/schema'
 import { useTable } from '@/hooks/useTable'
 import TableHeader from '@/components/ui/TableHeader'
 import DataTable, { Column } from '@/components/ui/DataTable'
@@ -9,40 +9,22 @@ import Pagination from '@/components/ui/Pagination'
 import Sidebar from '@/components/ui/Sidebar'
 import { Edit, Trash2, Eye, Phone, Mail, MapPin, Clock, CheckCircle, AlertCircle, Package } from 'lucide-react'
 
-// Order with customer details and items
-interface OrderWithDetails {
-  id: string
-  user_id: string
-  total_amount: string
-  notes: string | null
-  status: string
-  created_at: string | null
-  confirmed_at: string | null
-  ready_at: string | null
-  delivered_at: string | null
-  completed_at: string | null
-  feasibility_notes: string | null
-  production_notes: string | null
+// Order with joined data interface  
+interface OrderWithDetails extends Order {
   customer_name: string | null
   customer_email: string | null
   customer_phone: string | null
-  customer_address: any
-  order_items?: Array<{
-    id: string
-    order_id: string | null
-    product_id: string | null
-    quantity: number | null
-    base_price: string
-    customization_details: any
-    customization_fee: string | null
-    item_total: string
-    created_at: string | null
-    products: {
+  customer_address: CustomerAddress | null
+  total_items?: number
+  order_items?: Array<OrderItem & {
+    product_name?: string
+    products?: {
       name: string
       description: string | null
       imageURL: string[] | null
-    } | null
+    }
   }>
+  [key: string]: unknown // Add index signature for useTable compatibility
 }
 
 const ORDER_STATUSES = [
@@ -129,7 +111,7 @@ export default function OrdersPage() {
     return `$${numAmount.toFixed(2)}`
   }
 
-  const formatAddress = (address: any) => {
+  const formatAddress = (address: CustomerAddress | null) => {
     if (!address || typeof address !== 'object') return 'No address provided'
     
     const { street, city, state, zipCode, country } = address
@@ -142,30 +124,37 @@ export default function OrdersPage() {
       key: 'id',
       label: 'Order ID',
       width: 'w-32',
-      render: (id: string) => (
-        <code className="px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded font-mono">
-          {id.slice(0, 8)}...
-        </code>
-      )
+      render: (value: unknown, item: OrderWithDetails) => {
+        const id = value as string
+        return (
+          <code className="px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded font-mono">
+            {id.slice(0, 8)}...
+          </code>
+        )
+      }
     },
     {
       key: 'customer_name',
       label: 'Customer',
-      render: (customer_name: string | null, order: OrderWithDetails) => (
-        <div className="flex flex-col">
-          <span className="font-medium text-gray-900">
-            {customer_name || 'Unknown Customer'}
-          </span>
-          <span className="text-xs text-gray-500">
-            {order.customer_email}
-          </span>
-        </div>
-      )
+      render: (value: unknown, order: OrderWithDetails) => {
+        const customer_name = value as string | null
+        return (
+          <div className="flex flex-col">
+            <span className="font-medium text-gray-900">
+              {customer_name || 'Unknown Customer'}
+            </span>
+            <span className="text-xs text-gray-500">
+              {order.customer_email}
+            </span>
+          </div>
+        )
+      }
     },
     {
       key: 'status',
       label: 'Status',
-      render: (status: string | null) => {
+      render: (value: unknown, item: OrderWithDetails) => {
+        const status = value as string | null
         const statusInfo = getStatusInfo(status)
         return (
           <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${statusInfo.color}`}>
@@ -175,40 +164,46 @@ export default function OrdersPage() {
       }
     },
     {
-      key: 'total_amount',
+      key: 'totalAmount',
       label: 'Total',
-      render: (total_amount: string | null) => (
-        <span className="font-medium text-gray-900">
-          {formatCurrency(total_amount)}
-        </span>
-      )
+      render: (value: unknown, item: OrderWithDetails) => {
+        const totalAmount = value as string | null
+        return (
+          <div className="font-medium text-right">
+            {formatCurrency(totalAmount)}
+          </div>
+        )
+      }
     },
     {
-      key: 'created_at',
+      key: 'createdAt',
       label: 'Order Date',
-      render: (created_at: string | null) => (
-        <div className="flex flex-col">
-          <span className="text-sm text-gray-900">
-            {created_at ? new Date(created_at).toLocaleDateString() : '-'}
-          </span>
-          <span className="text-xs text-gray-500">
-            {created_at ? new Date(created_at).toLocaleTimeString([], { 
-              hour: '2-digit', 
-              minute: '2-digit' 
-            }) : ''}
-          </span>
-        </div>
-      )
+      render: (value: unknown, item: OrderWithDetails) => {
+        const createdAt = value as Date | null
+        return (
+          <div className="text-sm">
+            <div>
+              {createdAt ? new Date(createdAt).toLocaleDateString() : '-'}
+            </div>
+            <div className="text-gray-500 text-xs">
+              {createdAt ? new Date(createdAt).toLocaleTimeString([], { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+              }) : '-'}
+            </div>
+          </div>
+        )
+      }
     },
     {
       key: 'progress',
       label: 'Progress',
       render: (_, order: OrderWithDetails) => {
         const dates = {
-          confirmed: order.confirmed_at,
-          ready: order.ready_at,
-          completed: order.completed_at,
-          delivered: order.delivered_at
+          confirmed: order.confirmedAt,
+          ready: order.readyAt,
+          completed: order.completedAt,
+          delivered: order.deliveredAt
         }
         
         const completedSteps = Object.values(dates).filter(Boolean).length
@@ -352,25 +347,25 @@ export default function OrdersPage() {
               {/* Status Timeline */}
               <div className="space-y-2">
                 <div className="flex items-center space-x-3 text-sm">
-                  <CheckCircle className={`w-4 h-4 ${selectedOrder.created_at ? 'text-green-500' : 'text-gray-300'}`} />
-                  <span>Order Created: {selectedOrder.created_at ? new Date(selectedOrder.created_at).toLocaleString() : 'Pending'}</span>
+                  <CheckCircle className={`w-4 h-4 ${selectedOrder.createdAt ? 'text-green-500' : 'text-gray-300'}`} />
+                  <span>Order Created: {selectedOrder.createdAt ? new Date(selectedOrder.createdAt).toLocaleString() : 'Pending'}</span>
                 </div>
                 <div className="flex items-center space-x-3 text-sm">
                   <CheckCircle className={`w-4 h-4 ${selectedOrder.confirmed_at ? 'text-green-500' : 'text-gray-300'}`} />
-                  <span>Confirmed: {selectedOrder.confirmed_at ? new Date(selectedOrder.confirmed_at).toLocaleString() : 'Pending'}</span>
+                  <span>Confirmed: {selectedOrder.confirmedAt ? new Date(selectedOrder.confirmedAt as Date).toLocaleString() : 'Pending'}</span>
                 </div>
                 <div className="flex items-center space-x-3 text-sm">
                   <CheckCircle className={`w-4 h-4 ${selectedOrder.ready_at ? 'text-green-500' : 'text-gray-300'}`} />
-                  <span>Ready: {selectedOrder.ready_at ? new Date(selectedOrder.ready_at).toLocaleString() : 'Pending'}</span>
+                  <span>Ready: {selectedOrder.readyAt ? new Date(selectedOrder.readyAt as Date).toLocaleString() : 'Pending'}</span>
                 </div>
                 <div className="flex items-center space-x-3 text-sm">
                   <CheckCircle className={`w-4 h-4 ${selectedOrder.completed_at ? 'text-green-500' : 'text-gray-300'}`} />
-                  <span>Completed: {selectedOrder.completed_at ? new Date(selectedOrder.completed_at).toLocaleString() : 'Pending'}</span>
+                  <span>Completed: {selectedOrder.completedAt ? new Date(selectedOrder.completedAt as Date).toLocaleString() : 'Pending'}</span>
                 </div>
-                {selectedOrder.delivered_at && (
+                {selectedOrder.deliveredAt && (
                   <div className="flex items-center space-x-3 text-sm">
                     <CheckCircle className="w-4 h-4 text-green-500" />
-                    <span>Delivered: {new Date(selectedOrder.delivered_at).toLocaleString()}</span>
+                    <span>Delivered: {new Date(selectedOrder.deliveredAt as Date).toLocaleString()}</span>
                   </div>
                 )}
               </div>
@@ -448,25 +443,24 @@ export default function OrdersPage() {
                             </div>
                             <div>
                               <span className="text-gray-500">Base Price:</span>
-                              <span className="ml-1 font-medium">{formatCurrency(item.base_price)}</span>
+                              <span className="ml-1 font-medium">{formatCurrency(item.basePrice)}</span>
                             </div>
-                            {item.customization_fee && parseFloat(item.customization_fee.toString()) > 0 && (
+                            {item.customizationFee && parseFloat(item.customizationFee.toString()) > 0 && (
                               <div>
                                 <span className="text-gray-500">Customization:</span>
-                                <span className="ml-1 font-medium">{formatCurrency(item.customization_fee)}</span>
+                                <span className="ml-1 font-medium">{formatCurrency(item.customizationFee)}</span>
                               </div>
                             )}
                             <div>
                               <span className="text-gray-500">Item Total:</span>
-                              <span className="ml-1 font-medium">{formatCurrency(item.item_total)}</span>
+                              <span className="ml-1 font-medium">{formatCurrency(item.itemTotal)}</span>
                             </div>
                           </div>
 
-                          {item.customization_details && (
-                            <div className="mt-3 p-2 bg-gray-50 rounded text-sm">
-                              <span className="text-gray-500">Customization Details:</span>
-                              <pre className="mt-1 text-gray-700 whitespace-pre-wrap">
-                                {JSON.stringify(item.customization_details, null, 2)}
+                          {item.customizationDetails && (
+                            <div className="mt-2 p-2 bg-gray-50 rounded-md">
+                              <pre className="text-xs whitespace-pre-wrap">
+                                {JSON.stringify(item.customizationDetails, null, 2)}
                               </pre>
                             </div>
                           )}
@@ -482,12 +476,12 @@ export default function OrdersPage() {
             <div className="bg-gray-50 rounded-lg p-4">
               <div className="flex justify-between items-center text-lg font-medium">
                 <span>Total Amount:</span>
-                <span>{formatCurrency(selectedOrder.total_amount)}</span>
+                <span>{formatCurrency(selectedOrder.totalAmount as string)}</span>
               </div>
             </div>
 
             {/* Notes */}
-            {(selectedOrder.notes || selectedOrder.feasibility_notes || selectedOrder.production_notes) && (
+            {(selectedOrder.notes || selectedOrder.feasibilityNotes || selectedOrder.productionNotes) && (
               <div>
                 <h3 className="text-lg font-medium text-gray-900 mb-3">Notes</h3>
                 <div className="space-y-3">
@@ -497,16 +491,16 @@ export default function OrdersPage() {
                       <p className="text-sm text-gray-600 mt-1">{selectedOrder.notes}</p>
                     </div>
                   )}
-                  {selectedOrder.feasibility_notes && (
+                  {selectedOrder.feasibilityNotes && (
                     <div>
                       <label className="block text-sm font-medium text-gray-700">Feasibility Notes</label>
-                      <p className="text-sm text-gray-600 mt-1">{selectedOrder.feasibility_notes}</p>
+                      <p className="text-sm text-gray-600 mt-1">{selectedOrder.feasibilityNotes as string}</p>
                     </div>
                   )}
-                  {selectedOrder.production_notes && (
+                  {selectedOrder.productionNotes && (
                     <div>
                       <label className="block text-sm font-medium text-gray-700">Production Notes</label>
-                      <p className="text-sm text-gray-600 mt-1">{selectedOrder.production_notes}</p>
+                      <p className="text-sm text-gray-600 mt-1">{selectedOrder.productionNotes as string}</p>
                     </div>
                   )}
                 </div>

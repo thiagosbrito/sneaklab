@@ -6,7 +6,7 @@ export interface BagItem {
   id: string
   quantity: number
   addedAt: string
-  [key: string]: any // Allow for full product properties
+  [key: string]: unknown // Allow for full product properties
 }
 
 /**

@@ -2,6 +2,19 @@ import { pgTable, text, decimal, timestamp, integer, jsonb, uuid } from 'drizzle
 import { relations, sql } from 'drizzle-orm'
 import { products } from './products'
 
+// Customization details interface for the customization_details JSONB field
+export interface CustomizationDetails extends Record<string, string | number | boolean | null | undefined | CustomizationDetails | CustomizationDetails[]> {
+  size?: string;
+  color?: string;
+  material?: string;
+  personalizations?: Array<{
+    type: string;
+    value: string;
+    position?: string;
+  }>;
+  notes?: string;
+}
+
 export const orders = pgTable('orders', {
   id: text('id').primaryKey().default(sql`gen_random_uuid()`),
   userId: uuid('user_id').notNull(),
@@ -23,7 +36,7 @@ export const orderItems = pgTable('order_items', {
   productId: text('product_id').references(() => products.id),
   quantity: integer('quantity').default(1),
   basePrice: decimal('base_price', { precision: 10, scale: 2 }).notNull(),
-  customizationDetails: jsonb('customization_details'),
+  customizationDetails: jsonb('customization_details').$type<CustomizationDetails>(),
   customizationFee: decimal('customization_fee', { precision: 10, scale: 2 }).default('0'),
   itemTotal: decimal('item_total', { precision: 10, scale: 2 }).notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
