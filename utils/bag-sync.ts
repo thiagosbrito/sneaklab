@@ -1,11 +1,10 @@
 // Bag persistence utilities using API routes (client-safe)
+import { Product } from '@/db/schema';
 
-export type BagItem = {
-    id: string;
+export interface BagItem extends Product {
     quantity: number;
     addedAt: string;
-    [key: string]: any; // Allow for full product properties
-};
+}
 
 // Function to sync local bag to database via API (client-safe)
 export const syncBagToDatabase = async (
