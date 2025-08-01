@@ -16,7 +16,6 @@ export default function Hero() {
                     height={128}
                     width={128}
                 />
-                <span className="ml-4 text-gray-400">Loading hero content...</span>
             </div>
         );
     }
