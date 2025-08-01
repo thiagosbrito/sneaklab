@@ -1,6 +1,8 @@
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { createCategoryAction } from '@/app/actions'
+import { useState } from 'react'
 
 const categorySchema = z.object({
   name: z.string().min(1, 'Category name is required'),
@@ -14,15 +16,19 @@ export type CategoryFormValues = z.infer<typeof categorySchema>
 
 type CategoryFormProps = {
   initialValues?: CategoryFormValues
-  onSubmit: (values: CategoryFormValues) => void
+  onSuccess?: () => void
   loading?: boolean
 }
 
-export default function CategoryForm({ initialValues, onSubmit, loading }: CategoryFormProps) {
+export default function CategoryForm({ initialValues, onSuccess, loading }: CategoryFormProps) {
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  
   const {
     register,
     handleSubmit,
     formState: { errors },
+    reset,
   } = useForm<CategoryFormValues>({
     resolver: zodResolver(categorySchema),
     defaultValues: initialValues || {
@@ -33,6 +39,32 @@ export default function CategoryForm({ initialValues, onSubmit, loading }: Categ
       imageURL: [],
     },
   })
+
+  const onSubmit = async (data: CategoryFormValues) => {
+    setIsSubmitting(true)
+    setError(null)
+    
+    try {
+      const formData = new FormData()
+      formData.append('name', data.name)
+      formData.append('slug', data.slug)
+      formData.append('description', data.description || '')
+      formData.append('showInMenu', data.showInMenu.toString())
+      
+      const result = await createCategoryAction(formData)
+      
+      if (result.error) {
+        setError(result.error)
+      } else {
+        reset()
+        onSuccess?.()
+      }
+    } catch (err) {
+      setError('Failed to create category')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
 
   return (
     <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
@@ -73,12 +105,19 @@ export default function CategoryForm({ initialValues, onSubmit, loading }: Categ
           <span className="text-sm text-gray-700">Show in menu</span>
         </label>
       </div>
+      
+      {error && (
+        <div className="text-red-500 text-sm p-2 bg-red-50 rounded">
+          {error}
+        </div>
+      )}
+      
       <button
         type="submit"
-        className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors"
-        disabled={loading}
+        className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+        disabled={isSubmitting || loading}
       >
-        {loading ? 'Saving...' : 'Save Category'}
+        {isSubmitting ? 'Saving...' : 'Save Category'}
       </button>
     </form>
   )

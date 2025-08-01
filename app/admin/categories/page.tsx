@@ -17,10 +17,16 @@ type Category = Tables<'categories'>
 
 export default function CategoriesPage() {
   const [sheetOpen, setSheetOpen] = useState(false)
-  const [formLoading, setFormLoading] = useState(false)
+  
   // Handle add category
   const handleAddCategory = () => {
     setSheetOpen(true)
+  }
+
+  const handleCategorySuccess = () => {
+    setSheetOpen(false)
+    // Refresh the page to show new category
+    window.location.reload()
   }
 
   const { categories, loading } = useCategories()
@@ -163,7 +169,7 @@ export default function CategoriesPage() {
         footer={null}
         size='md'
       >
-        <CategoryForm onSubmit={handleAddCategory} loading={formLoading} />
+        <CategoryForm onSuccess={handleCategorySuccess} />
       </DashboardSheet>
     </div>
   )

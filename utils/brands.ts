@@ -1,28 +1,29 @@
-import { SupabaseClient } from '@supabase/supabase-js';
-import { Database } from '@/utils/supabase/database.types';
-
-type Brand = Database['public']['Tables']['brands']['Row'];
+import { Brand } from '@/db/schema';
+import { getBrandsFromDB, getBrandsWithProductCountFromDB, getBrandByIdFromDB } from '@/db/queries/brands';
 
 export interface BrandWithProductCount extends Brand {
   product_count: number;
 }
 
 /**
- * Get all brands from the database
+ * Get all brands - uses direct DB query for server-side, API for client-side
  */
-export async function getBrands(supabase: SupabaseClient): Promise<Brand[]> {
-  try {
-    const { data, error } = await supabase
-      .from('brands')
-      .select('*')
-      .order('name', { ascending: true });
+export async function getBrands(): Promise<Brand[]> {
+  // Check if we're on the server side
+  if (typeof window === 'undefined') {
+    // Server-side: use direct database query
+    return getBrandsFromDB();
+  }
 
-    if (error) {
-      console.error('Error fetching brands:', error);
-      throw error;
+  // Client-side: use API
+  try {
+    const response = await fetch('/api/brands');
+    if (!response.ok) {
+      throw new Error('Failed to fetch brands');
     }
 
-    return data || [];
+    const brands = await response.json();
+    return brands || [];
   } catch (error) {
     console.error('Error in getBrands:', error);
     throw error;
@@ -30,27 +31,24 @@ export async function getBrands(supabase: SupabaseClient): Promise<Brand[]> {
 }
 
 /**
- * Get brands with product count
+ * Get brands with product count - uses direct DB query for server-side, API for client-side
  */
-export async function getBrandsWithProductCount(supabase: SupabaseClient): Promise<BrandWithProductCount[]> {
+export async function getBrandsWithProductCount(): Promise<BrandWithProductCount[]> {
+  // Check if we're on the server side
+  if (typeof window === 'undefined') {
+    // Server-side: use direct database query
+    return getBrandsWithProductCountFromDB();
+  }
+
+  // Client-side: use API (fallback to current implementation for now)
   try {
-    const { data, error } = await supabase
-      .from('brands')
-      .select(`
-        *,
-        products(count)
-      `)
-      .order('name', { ascending: true });
-
-    if (error) {
-      console.error('Error fetching brands with product count:', error);
-      throw error;
-    }
-
-    // Transform the data to include product count
-    const brandsWithCount: BrandWithProductCount[] = (data || []).map(brand => ({
+    // For now, fetch brands and set product_count to 0
+    // TODO: Create /api/brands/with-count endpoint for actual product counts
+    const brands = await getBrands();
+    
+    const brandsWithCount: BrandWithProductCount[] = brands.map(brand => ({
       ...brand,
-      product_count: Array.isArray(brand.products) ? brand.products.length : 0
+      product_count: 0 // TODO: Calculate actual product count
     }));
 
     return brandsWithCount;
@@ -61,22 +59,27 @@ export async function getBrandsWithProductCount(supabase: SupabaseClient): Promi
 }
 
 /**
- * Get a brand by ID
+ * Get a brand by ID - uses direct DB query for server-side, API for client-side
  */
-export async function getBrandById(supabase: SupabaseClient, brandId: number): Promise<Brand | null> {
-  try {
-    const { data, error } = await supabase
-      .from('brands')
-      .select('*')
-      .eq('id', brandId)
-      .single();
+export async function getBrandById(brandId: string): Promise<Brand | null> {
+  // Check if we're on the server side
+  if (typeof window === 'undefined') {
+    // Server-side: use direct database query
+    return getBrandByIdFromDB(brandId);
+  }
 
-    if (error) {
-      console.error('Error fetching brand:', error);
-      return null;
+  // Client-side: use API
+  try {
+    const response = await fetch(`/api/brands/${brandId}`);
+    if (!response.ok) {
+      if (response.status === 404) {
+        return null;
+      }
+      throw new Error('Failed to fetch brand');
     }
 
-    return data;
+    const brand = await response.json();
+    return brand;
   } catch (error) {
     console.error('Error in getBrandById:', error);
     return null;

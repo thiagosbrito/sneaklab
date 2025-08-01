@@ -33,12 +33,12 @@ export default function DashboardInbox({ recentOrders }: DashboardInboxProps) {
                   </span>
                 </div>
                 <div className="text-xs text-gray-500">
-                  Order #{order.id?.slice(0, 8)} • €{order.total_amount?.toFixed(2)}
+                  Order #{order.id?.slice(0, 8)} • R$ {parseFloat(order.totalAmount)?.toFixed(2)}
                 </div>
               </div>
               <div className="text-right">
                 <div className="text-xs text-gray-500">
-                  {order.created_at ? formatDate(order.created_at) : 'N/A'}
+                  {order.createdAt ? formatDate(order.createdAt.toLocaleString()) : 'N/A'}
                 </div>
               </div>
             </div>

@@ -150,9 +150,9 @@ export default function BestSeller({ limit = 20 }: BestSellerProps) {
                 </div>
 
                 <div className="bg-gray-200 rounded-2xl p-6 h-80 flex items-center justify-center mb-4 relative overflow-hidden">
-                  {product.imageUrl && product.imageUrl.length > 0 ? (
+                  {product.imageURL && product.imageURL.length > 0 ? (
                     <Image
-                      src={product.imageUrl[0]}
+                      src={product.imageURL[0]}
                       alt={product.name}
                       fill
                       className="object-cover rounded-2xl"
@@ -202,13 +202,13 @@ export default function BestSeller({ limit = 20 }: BestSellerProps) {
                         id: product.id,
                         name: product.name,
                         description: product.description,
-                        imageUrl: product.imageUrl,
+                        imageURL: product.imageURL,
                         brandID: product.brandID,
-                        category: product.category,
+                        promoPrice: product.promoPrice,
                         isAvailable: product.isAvailable,
                         price: product.price,
                         categoryID: product.categoryID,
-                        created_at: product.created_at
+                        createdAt: product.createdAt
                       }}
                       showText={true}
                       className="w-full justify-center"

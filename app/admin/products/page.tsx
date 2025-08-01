@@ -93,13 +93,13 @@ export default function ProductsPage() {
   }, [supabase])
 
   // Helper functions
-  const getBrandName = (brandID: number | null) => {
+  const getBrandName = (brandID: string | null) => {
     if (!brandID) return 'Unknown Brand'
     const brand = brands.find(b => b.id === brandID)
     return brand?.name || 'Unknown Brand'
   }
 
-  const getCategoryName = (categoryID: number | null) => {
+  const getCategoryName = (categoryID: string | null) => {
     if (!categoryID) return 'Unknown Category'
     const category = categories.find(c => c.id === categoryID)
     return category?.name || 'Unknown Category'
@@ -136,7 +136,7 @@ export default function ProductsPage() {
     {
       key: 'brandID',
       label: 'Brand',
-      render: (brandID: number | null) => (
+      render: (brandID: string | null) => (
         <span className="text-sm text-gray-900">
           {getBrandName(brandID)}
         </span>
@@ -145,7 +145,7 @@ export default function ProductsPage() {
     {
       key: 'categoryID',
       label: 'Category',
-      render: (categoryID: number | null) => (
+      render: (categoryID: string | null) => (
         <span className="text-sm text-gray-900">
           {getCategoryName(categoryID)}
         </span>
@@ -234,20 +234,10 @@ export default function ProductsPage() {
     setSheetOpen(true)
   }
 
-  async function handleProductSubmit(product: Omit<Database['public']['Tables']['products']['Insert'], 'id'>) {
-    setSheetLoading(true)
-    // Save product to supabase
-    const { error } = await supabase.from('products').insert([product])
-    setSheetLoading(false)
-    if (!error) {
-      setSheetOpen(false)
-      // Optionally, refetch products
-      const { data: productsData } = await supabase
-        .from('products')
-        .select('*')
-        .order('created_at', { ascending: false })
-      setProducts(productsData || [])
-    }
+  const handleProductSuccess = () => {
+    setSheetOpen(false)
+    // Refresh the page to show new product
+    window.location.reload()
   }
 
   return (
@@ -323,7 +313,7 @@ export default function ProductsPage() {
         footer={null}
         size="xl"
       >
-        <ProductForm onSubmit={handleProductSubmit} loading={sheetLoading} brands={brands} categories={categories} />
+        <ProductForm onSuccess={handleProductSuccess} brands={brands} categories={categories} />
       </DashboardSheet>
     </div>
   )

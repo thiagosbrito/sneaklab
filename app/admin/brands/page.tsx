@@ -1,47 +1,45 @@
 "use client";
 import { useEffect, useState } from "react";
-import type { Database } from '@/utils/supabase/database.types';
-import useSupabaseBrowser from '@/utils/supabase/client';
+import { Brand } from '@/db/schema';
 import BrandForm from '@/components/brands/BrandForm';
 import ImageWithFallback from '@/components/ui/ImageWithFallback';
 
 export default function BrandsPage() {
-  const supabase = useSupabaseBrowser();
-  const [brands, setBrands] = useState<Database['public']['Tables']['brands']['Row'][]>([]);
+  const [brands, setBrands] = useState<Brand[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [adding, setAdding] = useState(false);
 
   async function fetchBrands() {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('brands')
-      .select('*')
-      .order('name', { ascending: true });
-    if (error) setError(error.message);
-    else setBrands(data || []);
-    setLoading(false);
+    try {
+      const response = await fetch('/api/brands');
+      const data = await response.json();
+      
+      if (response.ok) {
+        setBrands(data);
+      } else {
+        setError(data.error || 'Failed to fetch brands');
+      }
+    } catch (err) {
+      setError('Failed to fetch brands');
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => {
     fetchBrands();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function handleAddBrand(brand: Omit<Database['public']['Tables']['brands']['Insert'], 'id'>) {
-    setAdding(true);
-    setError(null);
-    const { error } = await supabase.from('brands').insert([brand]);
-    if (error) setError(error.message);
-    else await fetchBrands();
-    setAdding(false);
-  }
+  const handleBrandSuccess = () => {
+    fetchBrands(); // Refresh the list
+  };
 
   return (
     <div className="p-8">
       <h1 className="text-2xl font-bold mb-6">Brands</h1>
       <div className="max-w-md mb-8">
-        <BrandForm onSubmit={handleAddBrand} loading={adding} />
+        <BrandForm onSuccess={handleBrandSuccess} />
       </div>
       {error && <div className="text-red-500 mb-4">{error}</div>}
       {loading ? (

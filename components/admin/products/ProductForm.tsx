@@ -1,27 +1,27 @@
 "use client";
 import { useState, useRef } from "react";
-import type { Database } from '@/utils/supabase/database.types';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import useSupabaseBrowser from '@/utils/supabase/client';
+import { createProductAction } from '@/app/actions';
 
 interface Brand {
-  id: number;
+  id: string;
   name: string;
 }
 interface Category {
-  id: number;
+  id: string;
   name: string;
 }
 
 interface ProductFormProps {
-  onSubmit: (product: Omit<Database['public']['Tables']['products']['Insert'], 'id'>) => Promise<void>;
+  onSuccess?: () => void;
   loading?: boolean;
   brands: Brand[];
   categories: Category[];
 }
 
-export default function ProductForm({ onSubmit, loading, brands, categories }: ProductFormProps) {
+export default function ProductForm({ onSuccess, loading, brands, categories }: ProductFormProps) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [brandID, setBrandID] = useState("");
@@ -65,30 +65,41 @@ export default function ProductForm({ onSubmit, loading, brands, categories }: P
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    if (!name || !brandID || !categoryID || !price || imageURLs.length === 0) {
-      setError("All fields and at least one image are required.");
+    if (!name || !brandID || !categoryID || !price) {
+      setError("Name, brand, category, and price are required.");
       return;
     }
-    await onSubmit({
-      name,
-      description,
-      brandID: Number(brandID),
-      categoryID: Number(categoryID),
-      price: Number(price),
-      promoPrice: promoPrice ? Number(promoPrice) : null,
-      isAvailable,
-      imageURL: imageURLs,
-      created_at: new Date().toISOString(),
-    });
-    setName("");
-    setDescription("");
-    setBrandID("");
-    setCategoryID("");
-    setPrice("");
-    setPromoPrice("");
-    setIsAvailable(true);
-    setImageURLs([]);
-    if (fileInputRef.current) fileInputRef.current.value = "";
+    
+    try {
+      const result = await createProductAction({
+        name,
+        description,
+        brandID: brandID,
+        categoryID: categoryID,
+        price: Number(price),
+        promoPrice: promoPrice ? Number(promoPrice) : null,
+        isAvailable,
+        imageURL: imageURLs,
+      });
+      
+      if (result.error) {
+        setError(result.error);
+      } else {
+        // Reset form
+        setName("");
+        setDescription("");
+        setBrandID("");
+        setCategoryID("");
+        setPrice("");
+        setPromoPrice("");
+        setIsAvailable(true);
+        setImageURLs([]);
+        if (fileInputRef.current) fileInputRef.current.value = "";
+        onSuccess?.();
+      }
+    } catch (err) {
+      setError("Failed to create product");
+    }
   }
 
   return (

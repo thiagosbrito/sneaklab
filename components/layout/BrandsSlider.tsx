@@ -2,8 +2,7 @@
 import Image from 'next/image';
 import { motion, useAnimation } from 'framer-motion';
 import { useRef, useEffect, useState } from 'react';
-import useSupabaseBrowser from '@/utils/supabase/client';
-import { Database } from '@/utils/supabase/database.types';
+import { AboutUsSection } from '@/db/schema';
 
 const brandLogos = [
   'logos-marcas-Adidas-branco.webp',
@@ -50,21 +49,25 @@ export default function BrandsSlider() {
         animate();
     }, [rowWidth, controls]);
 
-    const [aboutUsContent, setAboutUsContent] = useState<Database["public"]["Tables"]["about_us_section"]["Row"] | null>(null);
-    const supabase = useSupabaseBrowser();
+    const [aboutUsContent, setAboutUsContent] = useState<AboutUsSection | null>(null);
 
     useEffect(() => {
-    const fetchAboutUsContent = async () => {
-      const { data, error } = await supabase.from("about_us_section").select("*").single();
-      if (error) {
-        console.error("Error fetching showcase section:", error.message);
-      } else {
-        setAboutUsContent(data);
-      }
-    };
+        const fetchAboutUsContent = async () => {
+            try {
+                const response = await fetch('/api/content/about-us');
+                if (response.ok) {
+                    const data = await response.json();
+                    setAboutUsContent(data);
+                } else {
+                    console.error("Error fetching about us section:", response.statusText);
+                }
+            } catch (error) {
+                console.error("Error fetching about us section:", error);
+            }
+        };
 
-    fetchAboutUsContent();
-  }, [supabase]);
+        fetchAboutUsContent();
+    }, []);
 
 
     return (

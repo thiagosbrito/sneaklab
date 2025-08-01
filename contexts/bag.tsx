@@ -1,10 +1,10 @@
 "use client";
 
 import React, { createContext, useState, useContext, useEffect } from "react";
-import { Product } from "@/utils/models/products";
 import { useAuth } from "@/contexts/auth";
 import useSupabaseBrowser from "@/utils/supabase/client";
 import { syncBagToSupabase, loadBagFromSupabase } from "@/utils/bag-sync";
+import { Product } from "@/db/schema";
 
 interface BagItem extends Product {
     quantity: number;
@@ -140,8 +140,13 @@ export const BagProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setBag([]);
     };
 
+    const parsedPrice = (item: string): number => {
+        if (item === '') return 0;
+        return parseFloat(item.replace(/[^0-9.-]+/g, ""));
+    }
+
     const totalItems = bag.reduce((total, item) => total + item.quantity, 0);
-    const totalPrice = bag.reduce((total, item) => total + (item.price * item.quantity), 0);
+    const totalPrice = bag.reduce((total, item) => total + (parsedPrice(item.price ?? '') * item.quantity), 0);
 
     return (
         <BagContext.Provider value={{ 

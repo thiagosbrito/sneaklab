@@ -8,7 +8,7 @@ interface RevenueInsightsProps {
 
 export default function RevenueInsights({ recentOrders }: RevenueInsightsProps) {
   // Calculate revenue insights
-  const totalRevenue = recentOrders.reduce((sum, order) => sum + (order.total_amount || 0), 0)
+  const totalRevenue = recentOrders.reduce((sum, order) => sum + (parseInt(order.totalAmount || '0'), 10), 0)
   const avgOrderValue = recentOrders.length > 0 ? totalRevenue / recentOrders.length : 0
   
   // Get current month and previous month orders
@@ -17,24 +17,24 @@ export default function RevenueInsights({ recentOrders }: RevenueInsightsProps) 
   const currentYear = currentDate.getFullYear()
   
   const currentMonthOrders = recentOrders.filter(order => {
-    if (!order.created_at) return false
-    const orderDate = new Date(order.created_at)
+    if (!order.createdAt) return false
+    const orderDate = new Date(order.createdAt)
     return orderDate.getMonth() === currentMonth && orderDate.getFullYear() === currentYear
   })
   
   const previousMonthOrders = recentOrders.filter(order => {
-    if (!order.created_at) return false
-    const orderDate = new Date(order.created_at)
+    if (!order.createdAt) return false
+    const orderDate = new Date(order.createdAt)
     const prevMonth = currentMonth === 0 ? 11 : currentMonth - 1
     const prevYear = currentMonth === 0 ? currentYear - 1 : currentYear
     return orderDate.getMonth() === prevMonth && orderDate.getFullYear() === prevYear
   })
-  
-  const currentMonthRevenue = currentMonthOrders.reduce((sum, order) => sum + (order.total_amount || 0), 0)
-  const previousMonthRevenue = previousMonthOrders.reduce((sum, order) => sum + (order.total_amount || 0), 0)
-  
-  const monthlyGrowth = previousMonthRevenue > 0 
-    ? ((currentMonthRevenue - previousMonthRevenue) / previousMonthRevenue) * 100 
+
+  const currentMonthRevenue = currentMonthOrders.reduce((sum, order) => sum + (parseInt(order.totalAmount || '0'), 10), 0)
+  const previousMonthRevenue = previousMonthOrders.reduce((sum, order) => sum + (parseInt(order.totalAmount || '0'), 10), 0)
+
+  const monthlyGrowth = previousMonthRevenue > 0
+    ? ((currentMonthRevenue - previousMonthRevenue) / previousMonthRevenue) * 100
     : currentMonthRevenue > 0 ? 100 : 0
 
   // Create daily revenue data for mini chart (last 7 days)
@@ -42,13 +42,13 @@ export default function RevenueInsights({ recentOrders }: RevenueInsightsProps) 
     const date = new Date()
     date.setDate(date.getDate() - (6 - i))
     const dayOrders = recentOrders.filter(order => {
-      if (!order.created_at) return false
-      const orderDate = new Date(order.created_at)
+      if (!order.createdAt) return false
+      const orderDate = new Date(order.createdAt)
       return orderDate.toDateString() === date.toDateString()
     })
     return {
       day: date.getDate(),
-      revenue: dayOrders.reduce((sum, order) => sum + (order.total_amount || 0), 0)
+      revenue: dayOrders.reduce((sum, order) => sum + (parseInt(order.totalAmount || '0'), 10), 0)
     }
   })
 
@@ -115,7 +115,7 @@ export default function RevenueInsights({ recentOrders }: RevenueInsightsProps) 
         <div className="space-y-2">
           {['completed', 'delivered', 'confirmed', 'pending'].map(status => {
             const statusOrders = recentOrders.filter(order => order.status === status)
-            const statusRevenue = statusOrders.reduce((sum, order) => sum + (order.total_amount || 0), 0)
+            const statusRevenue = statusOrders.reduce((sum, order) => sum + (parseInt(order.totalAmount || '0'), 10), 0)
             const percentage = totalRevenue > 0 ? (statusRevenue / totalRevenue) * 100 : 0
             
             if (statusOrders.length === 0) return null

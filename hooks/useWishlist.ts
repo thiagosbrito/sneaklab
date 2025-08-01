@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
-import useSupabaseBrowser from '@/utils/supabase/client';
 import { useAuth } from '@/contexts/auth';
 import { 
   addToWishlist, 
@@ -14,7 +13,6 @@ import {
 import Swal from 'sweetalert2';
 
 export function useWishlist() {
-  const supabase = useSupabaseBrowser();
   const { user } = useAuth();
   const [wishlist, setWishlist] = useState<WishlistItem[]>([]);
   const [wishlistCount, setWishlistCount] = useState(0);
@@ -32,8 +30,8 @@ export function useWishlist() {
     setLoading(true);
     setError(null);
 
-    const { wishlist: userWishlist, error: wishlistError } = await getUserWishlist(supabase, user.id);
-    const { count, error: countError } = await getWishlistCount(supabase, user.id);
+    const { wishlist: userWishlist, error: wishlistError } = await getUserWishlist(user.id);
+    const { count, error: countError } = await getWishlistCount(user.id);
 
     if (wishlistError || countError) {
       setError(wishlistError || countError || 'Failed to fetch wishlist');
@@ -43,10 +41,10 @@ export function useWishlist() {
     }
 
     setLoading(false);
-  }, [supabase, user]);
+  }, [user]);
 
   // Add product to wishlist
-  const addToWishlistHandler = useCallback(async (productId: number) => {
+  const addToWishlistHandler = useCallback(async (productId: string) => {
     if (!user) {
       Swal.fire({
         icon: 'error',
@@ -58,7 +56,7 @@ export function useWishlist() {
       return false;
     }
 
-    const { success, error } = await addToWishlist(supabase, user.id, productId);
+    const { success, error } = await addToWishlist(user.id, productId);
 
     if (success) {
       await fetchWishlist(); // Refresh wishlist
@@ -82,13 +80,13 @@ export function useWishlist() {
       });
       return false;
     }
-  }, [supabase, user, fetchWishlist]);
+  }, [user, fetchWishlist]);
 
   // Remove product from wishlist
-  const removeFromWishlistHandler = useCallback(async (productId: number) => {
+  const removeFromWishlistHandler = useCallback(async (productId: string) => {
     if (!user) return false;
 
-    const { success, error } = await removeFromWishlist(supabase, user.id, productId);
+    const { success, error } = await removeFromWishlist(user.id, productId);
 
     if (success) {
       await fetchWishlist(); // Refresh wishlist
@@ -112,18 +110,18 @@ export function useWishlist() {
       });
       return false;
     }
-  }, [supabase, user, fetchWishlist]);
+  }, [user, fetchWishlist]);
 
   // Check if product is in wishlist
-  const checkIsInWishlist = useCallback(async (productId: number): Promise<boolean> => {
+  const checkIsInWishlist = useCallback(async (productId: string): Promise<boolean> => {
     if (!user) return false;
 
-    const { isInWishlist: inWishlist } = await isInWishlist(supabase, user.id, productId);
+    const { isInWishlist: inWishlist } = await isInWishlist(user.id, productId);
     return inWishlist;
-  }, [supabase, user]);
+  }, [user]);
 
   // Toggle wishlist status
-  const toggleWishlist = useCallback(async (productId: number): Promise<boolean> => {
+  const toggleWishlist = useCallback(async (productId: string): Promise<boolean> => {
     const inWishlist = await checkIsInWishlist(productId);
     
     if (inWishlist) {

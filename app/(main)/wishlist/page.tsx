@@ -136,8 +136,11 @@ export default function WishlistPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {wishlist.map((item) => (
             item.product && (
-              <div key={item.id} className="relative">
-                <ProductCard product={item.product} />
+              <div key={item.product.id} className="relative">
+                <ProductCard product={{
+                  ...item.product,
+                  createdAt: new Date()
+                }} />
                 {/* Optional: Add remove from wishlist overlay button */}
                 <div className="absolute top-2 right-2 z-10">
                   <div className="bg-white rounded-full p-2 shadow-lg">

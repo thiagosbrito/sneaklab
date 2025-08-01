@@ -1,8 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Tables } from '@/utils/supabase/database.types'
-import useSupabaseBrowser from '@/utils/supabase/client'
+import { Profile } from '@/db/schema'
 import { useTable } from '@/hooks/useTable'
 import TableHeader from '@/components/ui/TableHeader'
 import DataTable, { Column } from '@/components/ui/DataTable'
@@ -10,8 +9,7 @@ import Pagination from '@/components/ui/Pagination'
 import Sidebar from '@/components/ui/Sidebar'
 import { Edit, Trash2, Eye, Phone, Mail, MapPin, Calendar, Package, DollarSign, User } from 'lucide-react'
 
-type Profile = Tables<'profiles'>
-type OrderWithUserDetails = Tables<'orders_with_user_details'>
+// Using Drizzle schema types
 
 interface CustomerData extends Profile {
   email?: string
@@ -27,7 +25,7 @@ export default function CustomersPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerData | null>(null)
   const [sidebarMode, setSidebarMode] = useState<'view' | 'add' | 'edit'>('view')
-  const supabase = useSupabaseBrowser()
+  // TODO: Migrate to Drizzle API routes
 
   const {
     paginatedData,
@@ -45,7 +43,7 @@ export default function CustomersPage() {
   } = useTable({
     data: customers,
     initialItemsPerPage: 10,
-    searchFields: ['full_name', 'email', 'phone']
+    searchFields: ['fullName', 'email', 'phone']
   })
 
   useEffect(() => {
@@ -53,55 +51,28 @@ export default function CustomersPage() {
   }, [])
 
   const fetchCustomers = async () => {
+    // TODO: Implement with Drizzle API routes
+    setLoading(false)
+    setCustomers([])
+    /*
     try {
       setLoading(true)
       
-      // Fetch all profiles
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('*')
-        .order('created_at', { ascending: false })
-
-      if (profilesError) {
-        console.error('Error fetching profiles:', profilesError)
-        return
+      // TODO: Replace with /api/admin/customers route using Drizzle
+      const response = await fetch('/api/admin/customers')
+      const data = await response.json()
+      
+      if (response.ok) {
+        setCustomers(data)
+      } else {
+        console.error('Error fetching customers:', data.error)
       }
-
-      // Fetch order summary data for each customer
-      const { data: orderSummaries, error: ordersError } = await supabase
-        .from('orders_with_user_details')
-        .select('user_id, customer_email, total_amount, created_at')
-
-      if (ordersError) {
-        console.error('Error fetching order summaries:', ordersError)
-        return
-      }
-
-      // Combine profile data with order statistics
-      const customerData: CustomerData[] = profiles.map(profile => {
-        const customerOrders = orderSummaries.filter(order => order.user_id === profile.id)
-        const totalSpent = customerOrders.reduce((sum, order) => sum + (order.total_amount || 0), 0)
-        const orderDates = customerOrders
-          .map(order => order.created_at)
-          .filter(date => date)
-          .sort()
-
-        return {
-          ...profile,
-          email: customerOrders[0]?.customer_email || undefined,
-          order_count: customerOrders.length,
-          total_spent: totalSpent,
-          first_order_date: orderDates[0] || undefined,
-          last_order_date: orderDates[orderDates.length - 1] || undefined
-        }
-      })
-
-      setCustomers(customerData)
     } catch (error) {
       console.error('Error fetching customers:', error)
     } finally {
       setLoading(false)
     }
+    */
   }
 
   // Apply additional filtering for order status
@@ -114,7 +85,7 @@ export default function CustomersPage() {
 
   const columns: Column<CustomerData>[] = [
     {
-      key: 'full_name',
+      key: 'fullName',
       label: 'Customer',
       render: (_, customer) => (
         <div className="flex items-center">
@@ -123,7 +94,7 @@ export default function CustomersPage() {
           </div>
           <div>
             <div className="font-medium text-gray-900">
-              {customer.full_name || 'No name'}
+              {customer.fullName || 'No name'}
             </div>
             <div className="text-sm text-gray-500">{customer.email || 'No email'}</div>
           </div>
@@ -174,12 +145,12 @@ export default function CustomersPage() {
       )
     },
     {
-      key: 'created_at',
+      key: 'createdAt',
       label: 'Joined',
       render: (_, customer) => (
         <span className="text-sm text-gray-600">
-          {customer.created_at 
-            ? new Date(customer.created_at).toLocaleDateString()
+          {customer.createdAt 
+            ? new Date(customer.createdAt).toLocaleDateString()
             : 'Unknown'
           }
         </span>
@@ -235,55 +206,61 @@ export default function CustomersPage() {
   }
 
   const handleDeleteCustomer = async (customer: CustomerData) => {
-    if (confirm(`Are you sure you want to delete ${customer.full_name || 'this customer'}?`)) {
+    // TODO: Implement with Drizzle API routes
+    alert('Customer deletion needs to be implemented with Drizzle API routes')
+    /*
+    if (confirm(`Are you sure you want to delete ${customer.fullName || 'this customer'}?`)) {
       try {
-        const { error } = await supabase
-          .from('profiles')
-          .delete()
-          .eq('id', customer.id)
-
-        if (error) {
-          console.error('Error deleting customer:', error)
-          alert('Failed to delete customer')
-        } else {
+        const response = await fetch(`/api/admin/customers/${customer.id}`, {
+          method: 'DELETE'
+        })
+        
+        if (response.ok) {
           await fetchCustomers()
+        } else {
+          alert('Failed to delete customer')
         }
       } catch (error) {
         console.error('Error deleting customer:', error)
         alert('Failed to delete customer')
       }
     }
+    */
   }
 
   const handleSaveCustomer = async (formData: any) => {
+    // TODO: Implement with Drizzle API routes
+    alert('Customer save functionality needs to be implemented with Drizzle API routes')
+    setSidebarOpen(false)
+    /*
     try {
       if (sidebarMode === 'add') {
         // For adding a new customer, we'd need to create both auth user and profile
         // This is typically handled through the auth system
         alert('Adding new customers requires integration with authentication system')
       } else if (sidebarMode === 'edit' && selectedCustomer) {
-        const { error } = await supabase
-          .from('profiles')
-          .update({
-            full_name: formData.full_name,
+        const response = await fetch(`/api/admin/customers/${selectedCustomer.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            fullName: formData.fullName,
             phone: formData.phone,
             address: formData.address,
-            updated_at: new Date().toISOString()
           })
-          .eq('id', selectedCustomer.id)
+        })
 
-        if (error) {
-          console.error('Error updating customer:', error)
-          alert('Failed to update customer')
-        } else {
+        if (response.ok) {
           setSidebarOpen(false)
           await fetchCustomers()
+        } else {
+          alert('Failed to update customer')
         }
       }
     } catch (error) {
       console.error('Error saving customer:', error)
       alert('Failed to save customer')
     }
+    */
   }
 
   const formatAddress = (address: any) => {
@@ -374,7 +351,7 @@ function CustomerDetails({ customer }: { customer: CustomerData }) {
           <div className="flex items-center">
             <User className="h-4 w-4 text-gray-400 mr-2" />
             <span className="text-sm font-medium text-gray-900">
-              {customer.full_name || 'No name provided'}
+              {customer.fullName || 'No name provided'}
             </span>
           </div>
           <div className="flex items-center">
@@ -426,8 +403,8 @@ function CustomerDetails({ customer }: { customer: CustomerData }) {
           <div className="flex items-center">
             <Calendar className="h-4 w-4 text-gray-400 mr-2" />
             <span className="text-sm text-gray-600">
-              Joined: {customer.created_at 
-                ? new Date(customer.created_at).toLocaleDateString()
+              Joined: {customer.createdAt 
+                ? new Date(customer.createdAt).toLocaleDateString()
                 : 'Unknown'
               }
             </span>
@@ -464,7 +441,7 @@ function CustomerForm({
   onCancel: () => void 
 }) {
   const [formData, setFormData] = useState({
-    full_name: customer?.full_name || '',
+    fullName: customer?.fullName || '',
     phone: customer?.phone || '',
     address: customer?.address || {}
   })
@@ -494,8 +471,8 @@ function CustomerForm({
         </label>
         <input
           type="text"
-          value={formData.full_name}
-          onChange={(e) => setFormData(prev => ({ ...prev, full_name: e.target.value }))}
+          value={formData.fullName}
+          onChange={(e) => setFormData(prev => ({ ...prev, fullName: e.target.value }))}
           className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           required
         />

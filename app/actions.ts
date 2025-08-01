@@ -4,6 +4,8 @@ import { encodedRedirect } from "@/utils/utils";
 import { createClient } from "@/utils/supabase/server";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { db } from "@/db";
+import { categories, products, brands } from "@/db/schema";
 
 export const signUpAction = async (formData: FormData) => {
   const email = formData.get("email")?.toString();
@@ -134,4 +136,87 @@ export const signOutAction = async () => {
   const supabase = await createClient();
   await supabase.auth.signOut();
   return redirect("/");
+};
+
+// Category actions using Drizzle
+export const createCategoryAction = async (formData: FormData) => {
+  try {
+    const name = formData.get("name")?.toString();
+    const slug = formData.get("slug")?.toString();
+    const description = formData.get("description")?.toString();
+    const showInMenu = formData.get("showInMenu") === "true";
+
+    if (!name || !slug) {
+      return { error: "Name and slug are required" };
+    }
+
+    const result = await db.insert(categories).values({
+      name,
+      slug,
+      description: description || null,
+      showInMenu,
+      imageURL: null, // Set to null for now, can be updated later
+    }).returning();
+
+    return { success: true, data: result[0] };
+  } catch (error) {
+    console.error("Error creating category:", error);
+    return { error: "Failed to create category" };
+  }
+};
+
+// Product actions using Drizzle
+export const createProductAction = async (product: {
+  name: string;
+  description?: string;
+  brandID: string;
+  categoryID: string;
+  price: number;
+  promoPrice?: number | null;
+  isAvailable: boolean;
+  imageURL: string[];
+}) => {
+  try {
+    if (!product.name || !product.brandID || !product.categoryID || !product.price) {
+      return { error: "Name, brand, category, and price are required" };
+    }
+
+    const result = await db.insert(products).values({
+      name: product.name,
+      description: product.description || null,
+      brandID: product.brandID,
+      categoryID: product.categoryID,
+      price: product.price.toString(), // Convert to decimal string
+      promoPrice: product.promoPrice?.toString() || null,
+      isAvailable: product.isAvailable,
+      imageURL: product.imageURL,
+    }).returning();
+
+    return { success: true, data: result[0] };
+  } catch (error) {
+    console.error("Error creating product:", error);
+    return { error: "Failed to create product" };
+  }
+};
+
+// Brand actions using Drizzle
+export const createBrandAction = async (formData: FormData) => {
+  try {
+    const name = formData.get("name")?.toString();
+    const logo = formData.get("logo")?.toString();
+
+    if (!name || !logo) {
+      return { error: "Name and logo are required" };
+    }
+
+    const result = await db.insert(brands).values({
+      name,
+      logo,
+    }).returning();
+
+    return { success: true, data: result[0] };
+  } catch (error) {
+    console.error("Error creating brand:", error);
+    return { error: "Failed to create brand" };
+  }
 };

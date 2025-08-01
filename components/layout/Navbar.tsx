@@ -5,14 +5,12 @@ import { ThemeSwitcher } from "../theme-switcher"
 import Logo from "./Logo"
 import { useBag } from "@/hooks/bag";
 import { ShoppingBag, User, LogOut, Heart, ChevronDown, Menu, X } from "lucide-react";
-import { Database } from "@/utils/supabase/database.types";
+import { Category } from '@/db/schema';
 import Link from "next/link";
 import BagSidebar from "../ui/BagSidebar";
 import { AuthSidebar } from "../ui/AuthSidebar";
 import { useAuth } from "@/contexts/auth";
 import useSupabaseBrowser from "@/utils/supabase/client";
-
-type Category = Database['public']['Tables']['categories']['Row'];
 
 interface NavbarProps {
     menuItems?: Category[];

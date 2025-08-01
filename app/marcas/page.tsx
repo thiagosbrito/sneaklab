@@ -3,14 +3,12 @@ import Showcase from '@/components/layout/Showcase';
 import SubscribeNewsletter from '@/components/layout/SubscribeNewsletter';
 import PageContainer from '@/components/ui/PageContainer';
 import { getBrandsWithProductCount } from '@/utils/brands';
-import { createClient } from '@/utils/supabase/server';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Package } from 'lucide-react';
 
 export default async function MarcasPage() {
-    const supabase = await createClient();
-    const brands = await getBrandsWithProductCount(supabase);
+    const brands = await getBrandsWithProductCount();
 
     return (
         <>

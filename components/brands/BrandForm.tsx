@@ -1,16 +1,16 @@
 "use client";
 import { useState, useRef } from "react";
-import type { Database } from '@/utils/supabase/database.types';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import useSupabaseBrowser from '@/utils/supabase/client';
+import { createBrandAction } from '@/app/actions';
 
 interface BrandFormProps {
-  onSubmit: (brand: Omit<Database['public']['Tables']['brands']['Insert'], 'id'>) => Promise<void>;
+  onSuccess?: () => void;
   loading?: boolean;
 }
 
-export default function BrandForm({ onSubmit, loading }: BrandFormProps) {
+export default function BrandForm({ onSuccess, loading }: BrandFormProps) {
   const [name, setName] = useState("");
   const [logo, setLogo] = useState("");
   const [uploading, setUploading] = useState(false);
@@ -25,10 +25,26 @@ export default function BrandForm({ onSubmit, loading }: BrandFormProps) {
       setError("Name and logo are required.");
       return;
     }
-    await onSubmit({ name, logo, created_at: new Date().toISOString() });
-    setName("");
-    setLogo("");
-    if (fileInputRef.current) fileInputRef.current.value = "";
+    
+    try {
+      const formData = new FormData();
+      formData.append('name', name);
+      formData.append('logo', logo);
+      
+      const result = await createBrandAction(formData);
+      
+      if (result.error) {
+        setError(result.error);
+      } else {
+        // Reset form
+        setName("");
+        setLogo("");
+        if (fileInputRef.current) fileInputRef.current.value = "";
+        onSuccess?.();
+      }
+    } catch (err) {
+      setError("Failed to create brand");
+    }
   }
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {

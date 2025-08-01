@@ -7,10 +7,10 @@ interface PerformanceIndicatorsProps {
 export default function PerformanceIndicators({ recentOrders }: PerformanceIndicatorsProps) {
   // Calculate today's performance
   const today = new Date()
-  const todayStr = today.toISOString().split('T')[0]
+  const todayStr = today.toLocaleString()
   
   const todayOrders = recentOrders.filter(order => 
-    order.created_at && order.created_at.split('T')[0] === todayStr
+    order.createdAt?.toLocaleString() === todayStr
   )
   
   // Calculate this week's performance
@@ -18,18 +18,18 @@ export default function PerformanceIndicators({ recentOrders }: PerformanceIndic
   weekStart.setDate(today.getDate() - today.getDay())
   
   const thisWeekOrders = recentOrders.filter(order => {
-    if (!order.created_at) return false
-    const orderDate = new Date(order.created_at)
+    if (!order.createdAt) return false
+    const orderDate = new Date(order.createdAt)
     return orderDate >= weekStart
   })
   
   // Calculate yesterday and last week for comparison
   const yesterday = new Date(today)
   yesterday.setDate(yesterday.getDate() - 1)
-  const yesterdayStr = yesterday.toISOString().split('T')[0]
-  
-  const yesterdayOrders = recentOrders.filter(order => 
-    order.created_at && order.created_at.split('T')[0] === yesterdayStr
+  const yesterdayStr = yesterday.toLocaleString()
+
+  const yesterdayOrders = recentOrders.filter(order =>
+    order.createdAt && order.createdAt.toLocaleString() === yesterdayStr
   )
   
   const lastWeekStart = new Date(weekStart)
@@ -37,16 +37,16 @@ export default function PerformanceIndicators({ recentOrders }: PerformanceIndic
   const lastWeekEnd = new Date(weekStart)
   
   const lastWeekOrders = recentOrders.filter(order => {
-    if (!order.created_at) return false
-    const orderDate = new Date(order.created_at)
+    if (!order.createdAt) return false
+    const orderDate = new Date(order.createdAt)
     return orderDate >= lastWeekStart && orderDate < lastWeekEnd
   })
 
   // Performance metrics
-  const todayRevenue = todayOrders.reduce((sum, order) => sum + (order.total_amount || 0), 0)
-  const yesterdayRevenue = yesterdayOrders.reduce((sum, order) => sum + (order.total_amount || 0), 0)
-  const thisWeekRevenue = thisWeekOrders.reduce((sum, order) => sum + (order.total_amount || 0), 0)
-  const lastWeekRevenue = lastWeekOrders.reduce((sum, order) => sum + (order.total_amount || 0), 0)
+  const todayRevenue = todayOrders.reduce((sum, order) => sum + (parseInt(order.totalAmount || '0'), 10), 0)
+  const yesterdayRevenue = yesterdayOrders.reduce((sum, order) => sum + (parseInt(order.totalAmount || '0'), 10), 0)
+  const thisWeekRevenue = thisWeekOrders.reduce((sum, order) => sum + (parseInt(order.totalAmount || '0'), 10), 0)
+  const lastWeekRevenue = lastWeekOrders.reduce((sum, order) => sum + (parseInt(order.totalAmount || '0'), 10), 0)
 
   const dailyGrowth = yesterdayRevenue > 0 
     ? ((todayRevenue - yesterdayRevenue) / yesterdayRevenue) * 100 

@@ -1,10 +1,11 @@
-import { createBrowserClient } from '@supabase/ssr'
-import { Database } from '@/utils/supabase/database.types'
+import { Order, Product, OrderItem, Profile } from '@/db/schema'
 
-export type Order = Database['public']['Tables']['orders']['Row']
-export type OrderWithUserDetails = Database['public']['Views']['orders_with_user_details']['Row']
-export type Product = Database['public']['Tables']['products']['Row']
-export type OrderItem = Database['public']['Tables']['order_items']['Row']
+export type OrderWithUserDetails = Order & {
+  customer_name: string | null
+  customer_email: string | null
+  customer_phone: string | null
+  customer_address: any
+}
 
 interface DailyStatsRecord {
   orders: number
@@ -30,62 +31,30 @@ export interface DashboardStats {
 }
 
 export async function getDashboardStats(): Promise<DashboardStats> {
-  const supabase = createBrowserClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
-  
   try {
     console.log('🔍 Fetching dashboard stats...')
     
-    // Get all orders with user details
-    const { data: orders, error: ordersError } = await supabase
-      .from('orders_with_user_details')
-      .select('*')
-      .order('created_at', { ascending: false })
-
-    if (ordersError) {
-      console.error('❌ Orders error:', ordersError)
-      throw ordersError
+    // Get all orders with user details from API
+    const response = await fetch('/api/admin/orders')
+    if (!response.ok) {
+      throw new Error('Failed to fetch orders')
     }
+    const orders: OrderWithUserDetails[] = await response.json()
     console.log('✅ Orders fetched:', orders?.length || 0)
 
-    // Get products count
-    const { count: productsCount, error: productsError } = await supabase
-      .from('products')
-      .select('*', { count: 'exact', head: true })
-      .eq('isAvailable', true)
-
-    if (productsError) {
-      console.error('❌ Products error:', productsError)
-      throw productsError
-    }
+    // Get products count from API
+    const productsResponse = await fetch('/api/products')
+    const productsData = await productsResponse.json()
+    const productsCount = productsData?.data?.length || 0
     console.log('✅ Products count:', productsCount)
 
-    // Get unique customers count
-    const { count: customersCount, error: customersError } = await supabase
-      .from('profiles')
-      .select('id', { count: 'exact', head: true })
-
-    if (customersError) {
-      console.error('❌ Customers error:', customersError)
-      throw customersError
-    }
+    // Get unique customers count (simplified - using unique user_ids from orders)
+    const uniqueCustomers = new Set(orders?.map(order => order.userId).filter(Boolean))
+    const customersCount = uniqueCustomers.size
     console.log('✅ Customers count:', customersCount)
 
-    // Get order items for product analysis
-    const { data: orderItems, error: orderItemsError } = await supabase
-      .from('order_items')
-      .select(`
-        *,
-        products (name)
-      `)
-
-    if (orderItemsError) {
-      console.error('❌ Order items error:', orderItemsError)
-      throw orderItemsError
-    }
-    console.log('✅ Order items fetched:', orderItems?.length || 0)
+    // For order items analysis, we'll use simplified data from orders
+    console.log('✅ Using simplified order analysis')
 
     // Process the data
     const totalOrders = orders?.length || 0
@@ -99,21 +68,21 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     // Enhanced revenue calculations
     // Total revenue from all orders (regardless of status)
     const totalRevenueAllOrders = orders?.reduce((sum: number, order: OrderWithUserDetails) => 
-      sum + (order.total_amount || 0), 0
+      sum + (parseFloat(order.totalAmount || '0')), 0
     ) || 0
 
     // Revenue from completed orders only
     const completedRevenue = orders?.filter((order: OrderWithUserDetails) => 
       order.status === 'completed'
     ).reduce((sum: number, order: OrderWithUserDetails) => 
-      sum + (order.total_amount || 0), 0
+      sum + (parseFloat(order.totalAmount || '0')), 0
     ) || 0
 
     // Revenue from delivered and completed orders
     const confirmedRevenue = orders?.filter((order: OrderWithUserDetails) => 
       order.status === 'completed' || order.status === 'delivered'
     ).reduce((sum: number, order: OrderWithUserDetails) => 
-      sum + (order.total_amount || 0), 0
+      sum + (parseFloat(order.totalAmount || '0')), 0
     ) || 0
 
     // Use total revenue from all orders as the main metric
@@ -152,18 +121,18 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
 
     const recentOrdersData = orders?.filter((order: OrderWithUserDetails) => 
-      order.created_at && new Date(order.created_at) >= thirtyDaysAgo
+      order.createdAt && new Date(order.createdAt) >= thirtyDaysAgo
     ) || []
 
     const dailyStats = recentOrdersData.reduce((acc: Record<string, { orders: number; revenue: number }>, order: OrderWithUserDetails) => {
-      if (!order.created_at) return acc
+      if (!order.createdAt) return acc
       
-      const date = new Date(order.created_at).toISOString().split('T')[0]
+      const date = new Date(order.createdAt).toISOString().split('T')[0]
       if (!acc[date]) {
         acc[date] = { orders: 0, revenue: 0 }
       }
       acc[date].orders += 1
-      acc[date].revenue += order.total_amount || 0
+      acc[date].revenue += parseFloat(order.totalAmount || '0')
       return acc
     }, {} as Record<string, { orders: number; revenue: number }>)
 
@@ -175,16 +144,9 @@ export async function getDashboardStats(): Promise<DashboardStats> {
       }))
       .sort((a, b) => a.date.localeCompare(b.date))
 
-    // Top products
-    const productStats = orderItems?.reduce((acc: Record<string, { total_quantity: number; total_revenue: number }>, item: any) => {
-      const productName = item.products?.name || 'Unknown Product'
-      if (!acc[productName]) {
-        acc[productName] = { total_quantity: 0, total_revenue: 0 }
-      }
-      acc[productName].total_quantity += item.quantity || 0
-      acc[productName].total_revenue += item.item_total || 0
-      return acc
-    }, {} as Record<string, { total_quantity: number; total_revenue: number }>) || {}
+    // Top products (simplified - using empty data for now)
+    // TODO: Implement proper product stats with order items API
+    const productStats = {} as Record<string, { total_quantity: number; total_revenue: number }>
 
     const topProducts = Object.entries(productStats)
       .map(([product_name, stats]) => ({ 
