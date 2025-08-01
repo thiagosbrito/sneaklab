@@ -1,9 +1,6 @@
-import { config } from 'dotenv'
 import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
 import * as schema from './schema'
-
-config({ path: '.env.local' })
 
 // Use the pooler URL for server-side connections to Supabase
 // Disable prefetch as it is not supported for "Transaction" pool mode

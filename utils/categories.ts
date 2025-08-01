@@ -111,3 +111,16 @@ export async function getCategoryById(id: string): Promise<Category | null> {
     return null;
   }
 }
+
+/**
+ * Get category name by ID - utility function for quick lookups
+ */
+export async function getCategoryNameById(id: string): Promise<string | null> {
+  try {
+    const category = await getCategoryById(id);
+    return category?.name || null;
+  } catch (error) {
+    console.error('Error getting category name by ID:', error);
+    return null;
+  }
+}

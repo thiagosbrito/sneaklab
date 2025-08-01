@@ -7,6 +7,8 @@ import { useLoginDialog } from "@/contexts/loginDialog";
 import Swal from "sweetalert2";
 import Link from "next/link";
 import Image from "next/image";
+import { useCategoryName } from "@/hooks/useCategoryName";
+import { useBrandName } from "@/hooks/useBrandName";
 
 export default function ProductCard({ product }: { product: Product }) {
     const { addToBag, getBagItemQuantity, isInBag } = useBag();
@@ -36,8 +38,9 @@ export default function ProductCard({ product }: { product: Product }) {
         }
         addToBag(product);
     };
-
-    const productUrl = `/${product.categoryID}/${product.id}`;
+    const { categoryName } = useCategoryName(product.categoryID);
+    const { brandName, loading: brandLoading } = useBrandName(product.brandID);
+    const productUrl = `/${categoryName}/${product.id}`;
 
     return (
         <div className="relative flex flex-col rounded-xl shadow-lg bg-white dark:bg-gray-900 overflow-hidden group hover:shadow-xl transition-shadow duration-300">
@@ -68,7 +71,7 @@ export default function ProductCard({ product }: { product: Product }) {
                     {/* Brand indicator */}
                     {product.brandID && (
                         <div className="absolute top-2 left-2 bg-black/70 text-white text-xs font-medium px-2 py-1 rounded">
-                            {product.brandID}
+                            {brandLoading ? 'Loading...' : brandName}
                         </div>
                     )}
                 </div>

@@ -2,8 +2,7 @@
 
 import React, { createContext, useState, useContext, useEffect } from "react";
 import { useAuth } from "@/contexts/auth";
-import useSupabaseBrowser from "@/utils/supabase/client";
-import { syncBagToSupabase, loadBagFromSupabase } from "@/utils/bag-sync";
+import { syncBagToDatabase, loadBagFromDatabase } from "@/utils/bag-sync";
 import { Product } from "@/db/schema";
 
 interface BagItem extends Product {
@@ -29,7 +28,6 @@ export const BagProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const [isLoading, setIsLoading] = useState(false);
     const [isInitialized, setIsInitialized] = useState(false);
     const { user } = useAuth();
-    const supabase = useSupabaseBrowser();
 
     // Reset initialization when user changes (login/logout/switch users)
     useEffect(() => {
@@ -49,19 +47,19 @@ export const BagProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                     setBag(localBag);
 
                     try {
-                        const supabaseBag = await loadBagFromSupabase(supabase, user.id);
+                        const databaseBag = await loadBagFromDatabase(user.id);
                         
-                        if (supabaseBag.length > 0 && localBag.length === 0) {
-                            // User has a bag in Supabase but not locally, use Supabase data
-                            setBag(supabaseBag);
-                            localStorage.setItem(userBagKey, JSON.stringify(supabaseBag));
+                        if (databaseBag.length > 0 && localBag.length === 0) {
+                            // User has a bag in database but not locally, use database data
+                            setBag(databaseBag);
+                            localStorage.setItem(userBagKey, JSON.stringify(databaseBag));
                         } else if (localBag.length > 0) {
-                            // User has local bag, sync it to Supabase
-                            await syncBagToSupabase(supabase, user.id, localBag);
+                            // User has local bag, sync it to database
+                            await syncBagToDatabase(user.id, localBag);
                         }
-                    } catch (supabaseError) {
-                        console.log('Supabase sync failed, continuing with localStorage:', supabaseError);
-                        // Continue with localStorage data, Supabase is just backup
+                    } catch (databaseError) {
+                        console.log('Database sync failed, continuing with localStorage:', databaseError);
+                        // Continue with localStorage data, database is just backup
                     }
                 } else {
                     // For unauthenticated users, use anonymous bag (clear it when they log out)
@@ -78,9 +76,9 @@ export const BagProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         if (!isInitialized) {
             loadInitialBag();
         }
-    }, [user, supabase, isInitialized]);
+    }, [user, isInitialized]);
 
-    // Save bag to localStorage and sync to Supabase whenever it changes (but not during initial load)
+    // Save bag to localStorage and sync to database whenever it changes (but not during initial load)
     useEffect(() => {
         if (!isInitialized) return; // Don't sync during initial load
         
@@ -90,14 +88,14 @@ export const BagProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 const userBagKey = `sneaklab-shopping-bag-${user.id}`;
                 localStorage.setItem(userBagKey, JSON.stringify(bag));
                 
-                // Sync to Supabase if user is authenticated
-                syncBagToSupabase(supabase, user.id, bag);
+                // Sync to database if user is authenticated
+                syncBagToDatabase(user.id, bag);
             }
             // Don't save anonymous bags to localStorage
         } catch (error) {
             console.error('Error saving bag:', error);
         }
-    }, [bag, user, supabase, isInitialized]);
+    }, [bag, user, isInitialized]);
 
     const addToBag = (product: Product, quantity = 1) => {
         setBag((prevBag) => {

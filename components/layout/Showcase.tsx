@@ -13,6 +13,9 @@ export default function Showcase() {
         if (response.ok) {
           const data = await response.json();
           setShowcaseData(data);
+        } else if (response.status === 404) {
+          console.log("No active showcase content found");
+          setShowcaseData(null);
         } else {
           console.error("Error fetching showcase section:", response.statusText);
         }
@@ -25,7 +28,8 @@ export default function Showcase() {
   }, []);
 
   if (!showcaseData) {
-    return <div>Loading...</div>;
+    // Don't render anything if no active showcase content
+    return null;
   }
 
   return (

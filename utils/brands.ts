@@ -85,3 +85,16 @@ export async function getBrandById(brandId: string): Promise<Brand | null> {
     return null;
   }
 }
+
+/**
+ * Get brand name by ID - utility function for quick lookups
+ */
+export async function getBrandNameById(brandId: string): Promise<string | null> {
+  try {
+    const brand = await getBrandById(brandId);
+    return brand?.name || null;
+  } catch (error) {
+    console.error('Error getting brand name by ID:', error);
+    return null;
+  }
+}

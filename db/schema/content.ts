@@ -1,10 +1,11 @@
-import { pgTable, text, timestamp } from 'drizzle-orm/pg-core'
+import { pgTable, text, timestamp, boolean } from 'drizzle-orm/pg-core'
 import { sql } from 'drizzle-orm'
 
 export const aboutUsSection = pgTable('about_us_section', {
   id: text('id').primaryKey().default(sql`gen_random_uuid()`),
   title: text('title').notNull(),
   description: text('description').notNull(),
+  isActive: boolean('is_active').notNull().default(false),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 })
 
@@ -15,6 +16,7 @@ export const heroSection = pgTable('hero_section', {
   backgroundImageUrl: text('background_image_url').notNull(),
   ctaText: text('cta_text').notNull(),
   ctaRedirectTo: text('cta_redirect_to').notNull(),
+  isActive: boolean('is_active').notNull().default(false),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 })
 
@@ -27,6 +29,7 @@ export const showcaseSection = pgTable('showcase_section', {
   subtitleB: text('subtitle_b').notNull(),
   subtitleDescriptionA: text('subtitle_description_a').notNull(),
   subtitleDescriptionB: text('subtitle_description_b').notNull(),
+  isActive: boolean('is_active').notNull().default(false),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 })
 

@@ -1,16 +1,16 @@
 import { NextResponse } from 'next/server'
-import { db } from '@/db'
-import { categories } from '@/db/schema'
-import { desc } from 'drizzle-orm'
+import { getCategoriesFromDB, getMenuCategoriesFromDB } from '@/db/queries/categories'
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const result = await db
-      .select()
-      .from(categories)
-      .orderBy(desc(categories.createdAt))
+    const { searchParams } = new URL(request.url)
+    const menuOnly = searchParams.get('menuOnly') === 'true'
 
-    return NextResponse.json(result)
+    const categories = menuOnly 
+      ? await getMenuCategoriesFromDB()
+      : await getCategoriesFromDB()
+
+    return NextResponse.json(categories)
   } catch (error) {
     console.error('Error fetching categories:', error)
     return NextResponse.json(
