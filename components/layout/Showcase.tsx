@@ -1,28 +1,35 @@
 'use client';
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import useSupabaseBrowser from "@/utils/supabase/client";
-import type { Database } from "@/utils/supabase/database.types";
+import { ShowcaseSection } from '@/db/schema';
 
 export default function Showcase() {
-  const [showcaseData, setShowcaseData] = useState<Database["public"]["Tables"]["showcase_section"]["Row"] | null>(null);
-  const supabase = useSupabaseBrowser();
+  const [showcaseData, setShowcaseData] = useState<ShowcaseSection | null>(null);
 
   useEffect(() => {
     const fetchShowcaseSection = async () => {
-      const { data, error } = await supabase.from("showcase_section").select("*").single();
-      if (error) {
-        console.error("Error fetching showcase section:", error.message);
-      } else {
-        setShowcaseData(data);
+      try {
+        const response = await fetch('/api/content/showcase');
+        if (response.ok) {
+          const data = await response.json();
+          setShowcaseData(data);
+        } else if (response.status === 404) {
+          console.log("No active showcase content found");
+          setShowcaseData(null);
+        } else {
+          console.error("Error fetching showcase section:", response.statusText);
+        }
+      } catch (error) {
+        console.error("Error fetching showcase section:", error);
       }
     };
 
     fetchShowcaseSection();
-  }, [supabase]);
+  }, []);
 
   if (!showcaseData) {
-    return <div>Loading...</div>;
+    // Don't render anything if no active showcase content
+    return null;
   }
 
   return (
@@ -42,16 +49,16 @@ export default function Showcase() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div>
-                <h3 className="text-xl font-semibold mb-3">{showcaseData.subtitle_a} {/* Add your subtitleA here */}</h3>
+                <h3 className="text-xl font-semibold mb-3">{showcaseData.subtitleA} {/* Add your subtitleA here */}</h3>
                 <p className="opacity-90">
-                  {showcaseData.subtitle_description_a} {/* Add your subtitleDescriptionA here */}
+                  {showcaseData.subtitleDescriptionA} {/* Add your subtitleDescriptionA here */}
                 </p>
               </div>
 
               <div>
-                <h3 className="text-xl font-semibold mb-3">{showcaseData.subtitle_b} {/* Add your subtitleB here */}</h3>
+                <h3 className="text-xl font-semibold mb-3">{showcaseData.subtitleB} {/* Add your subtitleB here */}</h3>
                 <p className="opacity-90">
-                  {showcaseData.subtitle_description_b} {/* Add your subtitleDescriptionB here */}
+                  {showcaseData.subtitleDescriptionB} {/* Add your subtitleDescriptionB here */}
                 </p>
               </div>
             </div>
@@ -61,7 +68,7 @@ export default function Showcase() {
           <div className="flex justify-center lg:justify-end">
             <div className="bg-white/20 backdrop-blur-sm rounded-3xl p-8 w-full max-w-md aspect-square flex items-center justify-center">
               <Image
-                src={showcaseData.image_url} /* Add your imageUrl here */
+                src={showcaseData.imageUrl} /* Add your imageUrl here */
                 alt="Showcase Image"
                 width={320}
                 height={240}

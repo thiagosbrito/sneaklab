@@ -8,7 +8,7 @@ export async function GET(request: Request) {
     // Extract query parameters
     const filters: ProductFilters = {
       categorySlug: searchParams.get('category') || undefined,
-      brandId: searchParams.get('brand') ? parseInt(searchParams.get('brand')!) : undefined,
+      brandId: searchParams.get('brand') || undefined,
       search: searchParams.get('search') || undefined,
       minPrice: searchParams.get('minPrice') ? parseFloat(searchParams.get('minPrice')!) : undefined,
       maxPrice: searchParams.get('maxPrice') ? parseFloat(searchParams.get('maxPrice')!) : undefined,

@@ -1,6 +1,13 @@
-import { createBrowserClient } from '@supabase/ssr'
-import { Database } from '@/utils/supabase/database.types'
-import { Product, ProductWithDetails, mapDatabaseProductToProduct } from '@/utils/models/products'
+import { Product } from '@/db/schema'
+import { 
+  getProductsFromDB, 
+  getProductsByCategoryFromDB, 
+  getProductByIdFromDB, 
+  getFeaturedProductsFromDB, 
+  searchProductsFromDB,
+  ProductsResult as DBProductsResult,
+  ProductFilters as DBProductFilters
+} from '@/db/queries/products'
 
 export interface ProductsResult {
   products: Product[]
@@ -12,7 +19,7 @@ export interface ProductsResult {
 
 export interface ProductFilters {
   categorySlug?: string
-  brandId?: number
+  brandId?: string
   search?: string
   minPrice?: number
   maxPrice?: number
@@ -24,11 +31,13 @@ export interface ProductFilters {
 }
 
 export async function getProducts(filters: ProductFilters = {}): Promise<ProductsResult> {
-  const supabase = createBrowserClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
+  // Check if we're on the server side
+  if (typeof window === 'undefined') {
+    // Server-side: use direct database query
+    return getProductsFromDB(filters)
+  }
 
+  // Client-side: use API
   const {
     categorySlug,
     brandId,
@@ -45,68 +54,37 @@ export async function getProducts(filters: ProductFilters = {}): Promise<Product
   try {
     console.log('🔍 Fetching products with filters:', filters)
 
-    // Build the query with joins
-    let query = supabase
-      .from('products')
-      .select(`
-        *,
-        brands (id, name, logo),
-        categories!inner (id, name, slug, description, imageURL, showInMenu)
-      `, { count: 'exact' })
+    // Build query parameters
+    const params = new URLSearchParams()
+    if (categorySlug) params.set('category', categorySlug)
+    if (brandId) params.set('brand', brandId)
+    if (search) params.set('search', search)
+    if (minPrice !== undefined) params.set('minPrice', minPrice.toString())
+    if (maxPrice !== undefined) params.set('maxPrice', maxPrice.toString())
+    if (isAvailable !== undefined) params.set('available', isAvailable.toString())
+    params.set('sortBy', sortBy)
+    params.set('sortOrder', sortOrder)
+    params.set('page', page.toString())
+    params.set('limit', limit.toString())
 
-    // Apply filters
-    if (isAvailable !== undefined) {
-      query = query.eq('isAvailable', isAvailable)
+    // Use appropriate API endpoint
+    const endpoint = categorySlug 
+      ? `/api/products/category/${categorySlug}?${params.toString()}`
+      : `/api/products?${params.toString()}`
+
+    const response = await fetch(endpoint)
+    if (!response.ok) {
+      throw new Error('Failed to fetch products')
     }
 
-    if (categorySlug) {
-      query = query.eq('categories.slug', categorySlug)
-    }
-
-    if (brandId) {
-      query = query.eq('brandID', brandId)
-    }
-
-    if (search) {
-      query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%`)
-    }
-
-    if (minPrice !== undefined) {
-      query = query.gte('price', minPrice)
-    }
-
-    if (maxPrice !== undefined) {
-      query = query.lte('price', maxPrice)
-    }
-
-    // Apply sorting
-    query = query.order(sortBy, { ascending: sortOrder === 'asc' })
-
-    // Apply pagination
-    const from = (page - 1) * limit
-    const to = from + limit - 1
-    query = query.range(from, to)
-
-    const { data, error, count } = await query
-
-    if (error) {
-      console.error('❌ Products query error:', error)
-      throw error
-    }
-
-    console.log('✅ Products fetched:', data?.length || 0, 'Total count:', count)
-
-    // Map database products to frontend Product type
-    const products = (data as ProductWithDetails[])?.map(mapDatabaseProductToProduct) || []
-
-    const totalCount = count || 0
-    const totalPages = Math.ceil(totalCount / limit)
-
+    const result = await response.json()
+    
     return {
-      products,
-      totalCount,
+      products: result.data || [],
+      totalCount: result.totalCount || 0,
       currentPage: page,
-      totalPages
+      totalPages: Math.ceil((result.totalCount || 0) / limit),
+      categoryNotFound: result.categoryNotFound
     }
 
   } catch (error) {
@@ -124,85 +102,39 @@ export async function getProductsByCategory(
   categorySlug: string, 
   options: Omit<ProductFilters, 'categorySlug'> = {}
 ): Promise<ProductsResult> {
-  const supabase = createBrowserClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
-
-  try {
-    // First check if the category exists
-    const { data: categoryData, error: categoryError } = await supabase
-      .from('categories')
-      .select('id, name, slug')
-      .eq('slug', categorySlug)
-      .single()
-
-    if (categoryError && categoryError.code === 'PGRST116') {
-      // Category not found
-      return {
-        products: [],
-        totalCount: 0,
-        currentPage: options.page || 1,
-        totalPages: 0,
-        categoryNotFound: true
-      }
-    }
-
-    if (categoryError) {
-      throw categoryError
-    }
-
-    // Category exists, get products
-    const result = await getProducts({ ...options, categorySlug })
-    
-    return {
-      ...result,
-      categoryNotFound: false
-    }
-
-  } catch (error) {
-    console.error('❌ Error in getProductsByCategory:', error)
-    return {
-      products: [],
-      totalCount: 0,
-      currentPage: options.page || 1,
-      totalPages: 0,
-      categoryNotFound: true
-    }
+  // Check if we're on the server side
+  if (typeof window === 'undefined') {
+    // Server-side: use direct database query
+    return getProductsByCategoryFromDB(categorySlug, options)
   }
+  
+  // Client-side: use API
+  return getProducts({ ...options, categorySlug })
 }
 
 export async function getProductById(id: string): Promise<Product | null> {
-  const supabase = createBrowserClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
+  // Check if we're on the server side
+  if (typeof window === 'undefined') {
+    // Server-side: use direct database query
+    return getProductByIdFromDB(id)
+  }
 
+  // Client-side: use API
   try {
     console.log('🔍 Fetching product by ID:', id)
 
-    const { data, error } = await supabase
-      .from('products')
-      .select(`
-        *,
-        brands (id, name, logo),
-        categories!inner (id, name, slug, description, imageURL, showInMenu)
-      `)
-      .eq('id', parseInt(id))
-      .eq('isAvailable', true)
-      .single()
-
-    if (error) {
-      console.error('❌ Product query error:', error)
-      if (error.code === 'PGRST116') {
+    const response = await fetch(`/api/products/${id}`)
+    if (!response.ok) {
+      if (response.status === 404) {
         return null // Product not found
       }
-      throw error
+      throw new Error('Failed to fetch product')
     }
 
-    console.log('✅ Product fetched:', data.name)
-
-    return mapDatabaseProductToProduct(data as ProductWithDetails)
+    const result = await response.json()
+    console.log('✅ Product fetched:', result.name)
+    
+    return result
 
   } catch (error) {
     console.error('❌ Error fetching product:', error)
@@ -211,6 +143,13 @@ export async function getProductById(id: string): Promise<Product | null> {
 }
 
 export async function getFeaturedProducts(limit: number = 8): Promise<Product[]> {
+  // Check if we're on the server side
+  if (typeof window === 'undefined') {
+    // Server-side: use direct database query
+    return getFeaturedProductsFromDB(limit)
+  }
+  
+  // Client-side: use API
   const result = await getProducts({
     isAvailable: true,
     sortBy: 'created_at',
@@ -225,5 +164,12 @@ export async function searchProducts(
   searchTerm: string,
   options: Omit<ProductFilters, 'search'> = {}
 ): Promise<ProductsResult> {
+  // Check if we're on the server side
+  if (typeof window === 'undefined') {
+    // Server-side: use direct database query
+    return searchProductsFromDB(searchTerm, options)
+  }
+  
+  // Client-side: use API
   return getProducts({ ...options, search: searchTerm })
 }

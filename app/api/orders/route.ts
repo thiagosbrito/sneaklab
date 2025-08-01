@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/utils/supabase/server'
 import { CreateOrderData, OrderItem } from '@/utils/orders'
+import { db } from '@/db'
+import { orders, orderItems, profiles } from '@/db/schema'
+import { eq, desc } from 'drizzle-orm'
 
 // Environment variables for n8n integration
 const N8N_WEBHOOK_URL = process.env.N8N_WEBHOOK_URL
@@ -177,7 +180,7 @@ export async function POST(request: NextRequest) {
       },
       customer_data: profile ? {
         name: profile.full_name || user.email || 'Customer',
-        phone: profile.phone,
+        phone: profile.phone || '',
         address: profile.address,
         email: user.email
       } : undefined
@@ -278,22 +281,29 @@ export async function PATCH(request: NextRequest) {
 
     // Send n8n webhook for status changes to 'confirmed' or 'ready'
     if (['confirmed', 'ready'].includes(status) && currentOrder.status !== status) {
-      // Get full order details for webhook
-      const { data: orderWithDetails } = await supabase
-        .from('orders_with_user_details')
-        .select(`
-          *,
-          order_items (
-            quantity,
-            base_price,
-            customization_fee,
-            item_total,
-            customization_details,
-            products (name, description)
-          )
-        `)
-        .eq('id', orderId)
-        .single()
+      // Get full order details for webhook using Drizzle
+      const [orderWithDetails] = await db
+        .select({
+          id: orders.id,
+          user_id: orders.userId,
+          total_amount: orders.totalAmount,
+          notes: orders.notes,
+          status: orders.status,
+          created_at: orders.createdAt,
+          confirmed_at: orders.confirmedAt,
+          ready_at: orders.readyAt,
+          delivered_at: orders.deliveredAt,
+          completed_at: orders.completedAt,
+          feasibility_notes: orders.feasibilityNotes,
+          production_notes: orders.productionNotes,
+          customer_name: profiles.fullName,
+          customer_email: profiles.id, // Will need to get actual email from auth.users
+          customer_phone: profiles.phone,
+          customer_address: profiles.address,
+        })
+        .from(orders)
+        .leftJoin(profiles, eq(orders.userId, profiles.id))
+        .where(eq(orders.id, orderId))
 
       if (orderWithDetails) {
         await sendN8nWebhook({
@@ -304,10 +314,10 @@ export async function PATCH(request: NextRequest) {
           timestamp: new Date().toISOString(),
           order_data: orderWithDetails,
           customer_data: {
-            name: orderWithDetails.customer_name,
-            phone: orderWithDetails.customer_phone,
-            address: orderWithDetails.customer_address,
-            email: orderWithDetails.customer_email
+            name: orderWithDetails.customer_name || 'Customer',
+            phone: orderWithDetails.customer_phone || '',
+            address: orderWithDetails.customer_address || '',
+            email: orderWithDetails.customer_email ?? undefined
           }
         })
       }

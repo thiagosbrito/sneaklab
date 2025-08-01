@@ -1,12 +1,12 @@
 import Footer from '@/components/layout/Footer';
 import Navbar from '@/components/layout/Navbar';
-import { getCategories } from '@/queries/get-categories';
-import { createClient } from '@/utils/supabase/server';
+import { getMenuCategories } from '@/utils/categories';
 import React from 'react'
 
+export const dynamic = 'force-dynamic'
+
 export default async function Layout({ children }: Readonly<{ children: React.ReactNode }>) {
-    const supabase = await createClient();
-    const categories = await getCategories(supabase);
+    const categories = await getMenuCategories();
   
     return (
       <div className="min-h-screen flex flex-col">

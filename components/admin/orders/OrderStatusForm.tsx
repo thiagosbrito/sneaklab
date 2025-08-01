@@ -65,7 +65,7 @@ export function OrderStatusForm({ orderId, currentStatus, onStatusUpdate }: Orde
       
     } catch (error) {
       console.error('Error updating order status:', error)
-      alert(`Failed to update order status: ${error.message}`)
+      alert(`Failed to update order status: ${error instanceof Error ? error.message : 'Unknown error'}`)
     } finally {
       setLoading(false)
     }

@@ -1,50 +1,30 @@
-import { Database } from '@/utils/supabase/database.types';
+import { Product as DrizzleProduct, Brand, Category } from '@/db/schema';
 
-// Base database product type
-export type DatabaseProduct = Database['public']['Tables']['products']['Row'];
-export type DatabaseBrand = Database['public']['Tables']['brands']['Row'];
-export type DatabaseCategory = Database['public']['Tables']['categories']['Row'];
-
-// Enhanced product type with joined data
-export type Product = {
-    id: string;
-    name: string;
-    description: string | null;
-    imageUrl: string[]; // Mapped from imageURL
-    brandID: string;
-    brandName?: string; // From joined brands table
-    brandLogo?: string; // From joined brands table
-    category: string; // Category slug for routing
-    categoryID: number;
-    categoryName?: string; // From joined categories table
-    isAvailable: boolean;
-    price: number;
-    promoPrice?: number | null;
-    created_at: string;
+// Use Drizzle types directly - no duplication needed
+export type Product = DrizzleProduct & {
+    // Optional joined data for enhanced displays
+    brandName?: string;
+    brandLogo?: string | null;
+    category?: string; // Category slug for routing
+    categoryName?: string;
+    // Legacy compatibility - map imageURL to imageUrl for existing components
+    imageUrl?: string[];
 };
 
-// Product with full relational data
-export type ProductWithDetails = DatabaseProduct & {
-    brands?: DatabaseBrand | null;
-    categories: DatabaseCategory;
+// Product with full relational data from joins
+export type ProductWithDetails = Product & {
+    brands?: Brand | null;
+    categories?: Category | null;
 };
 
-// Helper function to convert database product to frontend Product type
-export function mapDatabaseProductToProduct(dbProduct: ProductWithDetails): Product {
+// Helper function to add legacy compatibility fields
+export function addLegacyFields(product: DrizzleProduct, brand?: Brand, category?: Category): Product {
     return {
-        id: dbProduct.id.toString(),
-        name: dbProduct.name,
-        description: dbProduct.description,
-        imageUrl: dbProduct.imageURL || [],
-        brandID: dbProduct.brandID?.toString() || '',
-        brandName: dbProduct.brands?.name,
-        brandLogo: dbProduct.brands?.logo,
-        category: dbProduct.categories.slug,
-        categoryID: dbProduct.categoryID,
-        categoryName: dbProduct.categories.name,
-        isAvailable: dbProduct.isAvailable,
-        price: dbProduct.price || 0,
-        promoPrice: dbProduct.promoPrice,
-        created_at: dbProduct.created_at,
+        ...product,
+        brandName: brand?.name,
+        brandLogo: brand?.logo,
+        category: category?.slug,
+        categoryName: category?.name,
+        imageUrl: product.imageURL || [], // Legacy compatibility
     };
 }

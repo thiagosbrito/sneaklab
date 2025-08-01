@@ -1,12 +1,14 @@
 "use client";
 
-import { Product } from "@/utils/models/products";
+import { Product } from "@/db/schema";
 import { useBag } from "@/hooks/bag";
 import { useAuth } from "@/contexts/auth";
 import { useLoginDialog } from "@/contexts/loginDialog";
 import Swal from "sweetalert2";
 import Link from "next/link";
 import Image from "next/image";
+import { useCategoryName } from "@/hooks/useCategoryName";
+import { useBrandName } from "@/hooks/useBrandName";
 
 export default function ProductCard({ product }: { product: Product }) {
     const { addToBag, getBagItemQuantity, isInBag } = useBag();
@@ -36,17 +38,18 @@ export default function ProductCard({ product }: { product: Product }) {
         }
         addToBag(product);
     };
-
-    const productUrl = `/${product.category}/${product.id}`;
+    const { categoryName } = useCategoryName(product.categoryID);
+    const { brandName, loading: brandLoading } = useBrandName(product.brandID);
+    const productUrl = `/${categoryName}/${product.id}`;
 
     return (
         <div className="relative flex flex-col rounded-xl shadow-lg bg-white dark:bg-gray-900 overflow-hidden group hover:shadow-xl transition-shadow duration-300">
             {/* Product Image - Clickable */}
             <Link href={productUrl} className="relative w-full h-64 block">
                 <div className="relative w-full h-full">
-                    {product.imageUrl && product.imageUrl.length > 0 ? (
+                    {product.imageURL && product.imageURL.length > 0 ? (
                         <Image
-                            src={product.imageUrl[0]}
+                            src={product.imageURL[0]}
                             alt={product.name}
                             fill
                             className="object-cover rounded-t-xl group-hover:scale-105 transition-transform duration-300"
@@ -66,9 +69,9 @@ export default function ProductCard({ product }: { product: Product }) {
                     )}
 
                     {/* Brand indicator */}
-                    {product.brandName && (
+                    {product.brandID && (
                         <div className="absolute top-2 left-2 bg-black/70 text-white text-xs font-medium px-2 py-1 rounded">
-                            {product.brandName}
+                            {brandLoading ? 'Loading...' : brandName}
                         </div>
                     )}
                 </div>
@@ -92,7 +95,7 @@ export default function ProductCard({ product }: { product: Product }) {
                         <span className="text-xl font-bold text-gray-900 dark:text-white">
                             €{product.price}
                         </span>
-                        {product.promoPrice && product.promoPrice < product.price && (
+                        {product.promoPrice && product.promoPrice < (product.price ?? 0) && (
                             <span className="text-sm text-gray-500 line-through">
                                 €{product.promoPrice}
                             </span>

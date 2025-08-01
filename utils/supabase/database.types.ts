@@ -18,19 +18,19 @@ export type Database = {
         Row: {
           created_at: string | null
           description: string
-          id: number
+          id: string
           title: string
         }
         Insert: {
           created_at?: string | null
           description: string
-          id?: number
+          id?: string
           title: string
         }
         Update: {
           created_at?: string | null
           description?: string
-          id?: number
+          id?: string
           title?: string
         }
         Relationships: []
@@ -38,19 +38,19 @@ export type Database = {
       brands: {
         Row: {
           created_at: string
-          id: number
+          id: string
           logo: string
           name: string
         }
         Insert: {
           created_at?: string
-          id?: number
+          id?: string
           logo: string
           name: string
         }
         Update: {
           created_at?: string
-          id?: number
+          id?: string
           logo?: string
           name?: string
         }
@@ -60,7 +60,7 @@ export type Database = {
         Row: {
           created_at: string
           description: string | null
-          id: number
+          id: string
           imageURL: string[] | null
           name: string
           showInMenu: boolean
@@ -69,16 +69,16 @@ export type Database = {
         Insert: {
           created_at?: string
           description?: string | null
-          id?: number
+          id?: string
           imageURL?: string[] | null
           name: string
-          showInMenu: boolean
+          showInMenu?: boolean
           slug: string
         }
         Update: {
           created_at?: string
           description?: string | null
-          id?: number
+          id?: string
           imageURL?: string[] | null
           name?: string
           showInMenu?: boolean
@@ -94,7 +94,7 @@ export type Database = {
           cta_text: string
           hero_subtitle: string
           hero_title: string
-          id: number
+          id: string
         }
         Insert: {
           background_image_url: string
@@ -103,7 +103,7 @@ export type Database = {
           cta_text: string
           hero_subtitle: string
           hero_title: string
-          id?: number
+          id?: string
         }
         Update: {
           background_image_url?: string
@@ -112,7 +112,7 @@ export type Database = {
           cta_text?: string
           hero_subtitle?: string
           hero_title?: string
-          id?: number
+          id?: string
         }
         Relationships: []
       }
@@ -125,7 +125,7 @@ export type Database = {
           id: string
           item_total: number
           order_id: string | null
-          product_id: number | null
+          product_id: string | null
           quantity: number | null
         }
         Insert: {
@@ -136,7 +136,7 @@ export type Database = {
           id?: string
           item_total: number
           order_id?: string | null
-          product_id?: number | null
+          product_id?: string | null
           quantity?: number | null
         }
         Update: {
@@ -147,26 +147,19 @@ export type Database = {
           id?: string
           item_total?: number
           order_id?: string | null
-          product_id?: number | null
+          product_id?: string | null
           quantity?: number | null
         }
         Relationships: [
           {
-            foreignKeyName: "order_items_order_id_fkey"
+            foreignKeyName: "order_items_order_id_orders_id_fk"
             columns: ["order_id"]
             isOneToOne: false
             referencedRelation: "orders"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "order_items_order_id_fkey"
-            columns: ["order_id"]
-            isOneToOne: false
-            referencedRelation: "orders_with_user_details"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "order_items_product_id_fkey"
+            foreignKeyName: "order_items_product_id_products_id_fk"
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
@@ -185,7 +178,7 @@ export type Database = {
           notes: string | null
           production_notes: string | null
           ready_at: string | null
-          status: string | null
+          status: string
           total_amount: number
           user_id: string
         }
@@ -199,7 +192,7 @@ export type Database = {
           notes?: string | null
           production_notes?: string | null
           ready_at?: string | null
-          status?: string | null
+          status?: string
           total_amount: number
           user_id: string
         }
@@ -213,7 +206,7 @@ export type Database = {
           notes?: string | null
           production_notes?: string | null
           ready_at?: string | null
-          status?: string | null
+          status?: string
           total_amount?: number
           user_id?: string
         }
@@ -221,11 +214,11 @@ export type Database = {
       }
       products: {
         Row: {
-          brandID: number | null
-          categoryID: number
+          brandID: string | null
+          categoryID: string
           created_at: string
           description: string | null
-          id: number
+          id: string
           imageURL: string[] | null
           isAvailable: boolean
           name: string
@@ -233,23 +226,23 @@ export type Database = {
           promoPrice: number | null
         }
         Insert: {
-          brandID?: number | null
-          categoryID: number
+          brandID?: string | null
+          categoryID: string
           created_at?: string
           description?: string | null
-          id?: number
+          id?: string
           imageURL?: string[] | null
-          isAvailable: boolean
+          isAvailable?: boolean
           name: string
           price?: number | null
           promoPrice?: number | null
         }
         Update: {
-          brandID?: number | null
-          categoryID?: number
+          brandID?: string | null
+          categoryID?: string
           created_at?: string
           description?: string | null
-          id?: number
+          id?: string
           imageURL?: string[] | null
           isAvailable?: boolean
           name?: string
@@ -258,14 +251,14 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "products_brandID_fkey"
+            foreignKeyName: "products_brandID_brands_id_fk"
             columns: ["brandID"]
             isOneToOne: false
             referencedRelation: "brands"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "products_categoryID_fkey"
+            foreignKeyName: "products_categoryID_categories_id_fk"
             columns: ["categoryID"]
             isOneToOne: false
             referencedRelation: "categories"
@@ -280,7 +273,7 @@ export type Database = {
           full_name: string | null
           id: string
           phone: string | null
-          role: Database["public"]["Enums"]["roles"] | null
+          role: string | null
           updated_at: string | null
         }
         Insert: {
@@ -289,7 +282,7 @@ export type Database = {
           full_name?: string | null
           id: string
           phone?: string | null
-          role?: Database["public"]["Enums"]["roles"] | null
+          role?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -298,7 +291,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           phone?: string | null
-          role?: Database["public"]["Enums"]["roles"] | null
+          role?: string | null
           updated_at?: string | null
         }
         Relationships: []
@@ -309,21 +302,21 @@ export type Database = {
           id: string
           items: Json
           updated_at: string | null
-          user_id: string | null
+          user_id: string
         }
         Insert: {
           created_at?: string | null
           id?: string
           items?: Json
           updated_at?: string | null
-          user_id?: string | null
+          user_id: string
         }
         Update: {
           created_at?: string | null
           id?: string
           items?: Json
           updated_at?: string | null
-          user_id?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -331,7 +324,7 @@ export type Database = {
         Row: {
           created_at: string | null
           description: string
-          id: number
+          id: string
           image_url: string
           subtitle_a: string
           subtitle_b: string
@@ -342,7 +335,7 @@ export type Database = {
         Insert: {
           created_at?: string | null
           description: string
-          id?: number
+          id?: string
           image_url: string
           subtitle_a: string
           subtitle_b: string
@@ -353,7 +346,7 @@ export type Database = {
         Update: {
           created_at?: string | null
           description?: string
-          id?: number
+          id?: string
           image_url?: string
           subtitle_a?: string
           subtitle_b?: string
@@ -367,24 +360,24 @@ export type Database = {
         Row: {
           created_at: string | null
           id: string
-          product_id: number
+          product_id: string
           user_id: string
         }
         Insert: {
           created_at?: string | null
           id?: string
-          product_id: number
+          product_id: string
           user_id: string
         }
         Update: {
           created_at?: string | null
           id?: string
-          product_id?: number
+          product_id?: string
           user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "wishlist_product_id_fkey"
+            foreignKeyName: "wishlist_product_id_products_id_fk"
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
@@ -394,33 +387,13 @@ export type Database = {
       }
     }
     Views: {
-      orders_with_user_details: {
-        Row: {
-          completed_at: string | null
-          confirmed_at: string | null
-          created_at: string | null
-          customer_address: Json | null
-          customer_email: string | null
-          customer_name: string | null
-          customer_phone: string | null
-          delivered_at: string | null
-          feasibility_notes: string | null
-          id: string | null
-          notes: string | null
-          production_notes: string | null
-          ready_at: string | null
-          status: string | null
-          total_amount: number | null
-          user_id: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       [_ in never]: never
     }
     Enums: {
-      roles: "ADMIN" | "CUSTOMER"
+      [_ in never]: never
     }
     CompositeTypes: {
       [_ in never]: never
@@ -547,8 +520,6 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {
-      roles: ["ADMIN", "CUSTOMER"],
-    },
+    Enums: {},
   },
 } as const

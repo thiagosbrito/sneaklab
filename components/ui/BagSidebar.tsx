@@ -60,7 +60,7 @@ const BagSidebar: React.FC<BagSidebarProps> = ({ isOpen, onClose }) => {
                                         className="flex gap-4 p-3 border dark:border-gray-700 rounded-lg"
                                     >
                                         <img
-                                            src={item.imageUrl[0]}
+                                            src={item.imageURL?.[0] ?? ''}
                                             alt={item.name}
                                             className="w-16 h-16 object-cover rounded"
                                         />

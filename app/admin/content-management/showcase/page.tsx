@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import DashboardSheet from '@/components/ui/DashboardSheet';
 import ShowcaseSectionForm from '@/components/admin/content-management/ShowcaseSectionForm';
-import useSupabaseBrowser from '@/utils/supabase/client';
 
 export default function ShowcaseSectionPage() {
   const [formData, setFormData] = useState({
@@ -18,32 +17,40 @@ export default function ShowcaseSectionPage() {
   const [hasContent, setHasContent] = useState(false);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
 
-  const supabase = useSupabaseBrowser();
-
   useEffect(() => {
     const fetchShowcaseSection = async () => {
-      const { data, error } = await supabase.from('showcase_section').select('*').single();
+      try {
+        const response = await fetch('/api/content/showcase');
+        
+        if (response.status === 404) {
+          setHasContent(false);
+          return;
+        }
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch showcase section');
+        }
 
-      if (error) {
-        console.error('Error fetching showcase section:', error.message);
-      } else if (data) {
+        const data = await response.json();
+        
         setFormData({
-          imageUrl: data.image_url || '',
+          imageUrl: data.imageUrl || '',
           title: data.title || '',
-          subtitleA: data.subtitle_a || '',
-          subtitleB: data.subtitle_b || '',
-          subtitleDescriptionA: data.subtitle_description_a || '',
-          subtitleDescriptionB: data.subtitle_description_b || '',
+          subtitleA: data.subtitleA || '',
+          subtitleB: data.subtitleB || '',
+          subtitleDescriptionA: data.subtitleDescriptionA || '',
+          subtitleDescriptionB: data.subtitleDescriptionB || '',
           description: data.description || '',
         });
         setHasContent(true);
-      } else {
+      } catch (error) {
+        console.error('Error fetching showcase section:', error);
         setHasContent(false);
       }
     };
 
     fetchShowcaseSection();
-  }, [supabase]);
+  }, []);
 
   const handleSave = () => {
     setIsSheetOpen(false);

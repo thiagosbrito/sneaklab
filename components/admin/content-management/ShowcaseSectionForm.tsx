@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import useSupabaseBrowser from "@/utils/supabase/client";
+import { createShowcaseSectionAction } from "@/app/actions";
 
 interface ShowcaseSectionFormProps {
   initialData?: {
@@ -61,24 +62,29 @@ export default function ShowcaseSectionForm({ initialData, onSave }: ShowcaseSec
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
 
-    const snakeCaseData = {
-      image_url: formData.imageUrl,
-      title: formData.title,
-      subtitle_a: formData.subtitleA,
-      subtitle_b: formData.subtitleB,
-      subtitle_description_a: formData.subtitleDescriptionA,
-      subtitle_description_b: formData.subtitleDescriptionB,
-      description: formData.description,
-    };
+    try {
+      const submitData = new FormData();
+      submitData.append('title', formData.title);
+      submitData.append('description', formData.description);
+      submitData.append('imageUrl', formData.imageUrl);
+      submitData.append('subtitleA', formData.subtitleA);
+      submitData.append('subtitleB', formData.subtitleB);
+      submitData.append('subtitleDescriptionA', formData.subtitleDescriptionA);
+      submitData.append('subtitleDescriptionB', formData.subtitleDescriptionB);
 
-    const { error } = await supabase.from("showcase_section").upsert([snakeCaseData]);
+      const result = await createShowcaseSectionAction(submitData);
 
-    if (error) {
-      console.error("Error saving showcase section:", error.message);
-    } else {
-      alert("Showcase section saved successfully!");
-      onSave();
+      if (result.error) {
+        setError(result.error);
+      } else {
+        alert("Showcase section saved successfully!");
+        onSave();
+      }
+    } catch (error) {
+      console.error("Error saving showcase section:", error);
+      setError("Failed to save showcase section");
     }
   };
 

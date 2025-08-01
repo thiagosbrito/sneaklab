@@ -7,14 +7,11 @@ import {
   Loader2, 
   AlertCircle, 
   ArrowLeft, 
-  Badge, 
-  ShoppingBag, 
   Heart, 
   Share2, 
   Truck, 
   Shield, 
   RotateCcw,
-  Star,
   CheckCircle2
 } from "lucide-react";
 import Link from "next/link";
@@ -45,10 +42,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
     // Check if product is in wishlist when product loads
     useEffect(() => {
         if (product) {
-            const productId = parseInt(product.id, 10); // Convert product.id to a number
-            if (!isNaN(productId)) {
-                checkIsInWishlist(productId).then(setIsWishlisted);
-            }
+            checkIsInWishlist(product.id).then(setIsWishlisted);
         }
     }, [product, checkIsInWishlist]);
 
@@ -93,12 +87,9 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
     const handleToggleWishlist = async () => {
         if (!product) return;
         setWishlistLoading(true);
-        const productId = parseInt(product.id, 10); // Convert product.id to a number
-        if (!isNaN(productId)) {
-            const success = await toggleWishlist(productId);
-            if (success) {
-                setIsWishlisted(!isWishlisted);
-            }
+        const success = await toggleWishlist(product.id);
+        if (success) {
+            setIsWishlisted(!isWishlisted);
         }
         setWishlistLoading(false);
     };
@@ -183,13 +174,13 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
 
                                 {/* Price */}
                                 <div className="flex items-baseline gap-3 mb-6">
-                                    <span className="text-4xl font-bold text-gray-900">€{product.price}</span>
-                                    {product.promoPrice && product.promoPrice < product.price && (
+                                    <span className="text-4xl font-bold text-gray-900">R$ {product.price ?? '0,00'}</span>
+                                    {product.promoPrice && product.promoPrice < (product?.price || '0,00') && (
                                         <>
-                                            <span className="text-2xl text-gray-500 line-through">€{product.promoPrice}</span>
-                                            <span className="bg-red-100 text-red-700 text-sm font-medium px-2 py-1 rounded">
-                                                Save €{(product.price - product.promoPrice).toFixed(2)}
-                                            </span>
+                                            <span className="text-2xl text-gray-500 line-through">R$ {product.promoPrice}</span>
+                                            {/* <span className="bg-red-100 text-red-700 text-sm font-medium px-2 py-1 rounded">
+                                                Save R$ {((product.price ?? '0,00') - (product.promoPrice ?? '0,00')).toFixed(2)}
+                                            </span> */}
                                         </>
                                     )}
                                 </div>
