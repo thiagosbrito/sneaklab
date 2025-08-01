@@ -86,15 +86,13 @@ export default function Navbar({ menuItems = [] }: NavbarProps) {
     }, [isMobileMenuOpen]);
 
     return (
-        <>
-            <nav className="flex items-center p-4 py-6 fixed w-full z-20 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200/20 dark:border-gray-700/30">
+        <div className="w-full flex items-center justify-center m-0 p-0">
+            <nav className="flex items-center p-4 py-6 w-full xl:w-9/12 xl:fixed xl:top-4 xl:rounded-xl xl:shadow-2xl mx-auto z-20 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200/20 dark:border-gray-700/30 transition-all duration-300 ease-linear">
                 <div className="container w-12/12 mx-auto flex justify-between items-center">
-                    <div className="flex items-center gap-4">
-                        <Logo />
-                    </div>
+                    <Logo />
                     
                     {/* Desktop Navigation */}
-                    <div className="space-x-4 hidden lg:flex">
+                    <div className="space-x-2 xl:space-x-4 hidden lg:flex">
                         <Link href="/" className="text-gray-700 dark:text-gray-200 hover:text-purple-600 dark:hover:text-purple-400 transition-colors font-medium">Home</Link>
                         {menuItems
                             .filter(category => category.showInMenu)
@@ -346,6 +344,6 @@ export default function Navbar({ menuItems = [] }: NavbarProps) {
                 isOpen={isAuthSidebarOpen}
                 onClose={() => setIsAuthSidebarOpen(false)}
             />
-        </>
+        </div>
     )
 }

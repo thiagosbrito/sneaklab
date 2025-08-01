@@ -2,9 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { ChevronLeft, ChevronRight, TrendingUp, Loader2 } from 'lucide-react';
-import { Product } from '@/utils/models/products';
-import { useBestsellers } from '@/hooks/useBestsellers';
-import { useBag } from '@/hooks/bag';
+import { useBestsellers } from '@/hooks/queries/useBestsellers';
 import Image from 'next/image';
 import AddToBagButton from '@/components/ui/AddToBagButton';
 
@@ -15,7 +13,9 @@ interface BestSellerProps {
 export default function BestSeller({ limit = 20 }: BestSellerProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const { bestsellers, loading, error, refetch } = useBestsellers(limit);
+  const { data, isLoading, error, refetch } = useBestsellers(limit);
+  const bestsellers = data?.data || [];
+  const loading = isLoading;
   
   const itemsPerView = 4; // Number of items visible at once
   const maxIndex = Math.max(0, bestsellers.length - itemsPerView);
@@ -62,40 +62,6 @@ export default function BestSeller({ limit = 20 }: BestSellerProps) {
           </div>
           <div className="flex items-center justify-center py-20">
             <Loader2 className="w-12 h-12 text-white animate-spin" />
-          </div>
-        </div>
-      </section>
-    );
-  }
-
-  // Show error state
-  if (error) {
-    return (
-      <section className="bg-purple-900 px-4 py-16">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex justify-between items-center mb-12">
-            <div>
-              <h2 className="text-4xl font-bold text-white mb-2 flex items-center gap-3">
-                <TrendingUp className="w-8 h-8" />
-                Best Sellers
-              </h2>
-              <p className="text-purple-200">Unable to load bestsellers at the moment.</p>
-            </div>
-            <button 
-              onClick={refetch}
-              className="px-6 py-2 border border-white/30 text-white rounded-md hover:bg-white/10 transition-colors"
-            >
-              Try Again
-            </button>
-          </div>
-          <div className="text-center py-20">
-            <p className="text-white/70 mb-4">Error: {error}</p>
-            <button 
-              onClick={refetch}
-              className="px-6 py-2 bg-white/20 text-white rounded-md hover:bg-white/30 transition-colors"
-            >
-              Retry
-            </button>
           </div>
         </div>
       </section>

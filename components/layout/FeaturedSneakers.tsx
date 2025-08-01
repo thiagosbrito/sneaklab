@@ -1,12 +1,12 @@
 "use client";
 
-import { useProducts } from "@/hooks/useProducts";
+import { useProductsState } from "@/hooks/queries/useProducts";
 import ProductCard from "@/components/layout/ProductCard";
 import { Loader2, Sparkles } from "lucide-react";
 import Link from "next/link";
 
 export default function FeaturedSneakers() {
-    const { products, loading, error } = useProducts({ 
+    const { products, loading, error } = useProductsState({ 
         limit: 8,
         sortBy: 'created_at',
         sortOrder: 'desc',

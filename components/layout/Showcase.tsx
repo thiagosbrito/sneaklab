@@ -1,34 +1,29 @@
 'use client';
 import Image from "next/image";
-import { useEffect, useState } from "react";
-import { ShowcaseSection } from '@/db/schema';
+import { useShowcaseSectionState } from '@/hooks/queries/useContent';
+import AnimatedView from "../animations/AnimatedView";
+import * as shoesLoader from '../animations/shoes-loader/shoes-loader.json'
 
 export default function Showcase() {
-  const [showcaseData, setShowcaseData] = useState<ShowcaseSection | null>(null);
+  const { showcaseData, loading, error } = useShowcaseSectionState();
 
-  useEffect(() => {
-    const fetchShowcaseSection = async () => {
-      try {
-        const response = await fetch('/api/content/showcase');
-        if (response.ok) {
-          const data = await response.json();
-          setShowcaseData(data);
-        } else if (response.status === 404) {
-          console.log("No active showcase content found");
-          setShowcaseData(null);
-        } else {
-          console.error("Error fetching showcase section:", response.statusText);
-        }
-      } catch (error) {
-        console.error("Error fetching showcase section:", error);
-      }
-    };
+  // Show loading state if needed (optional, you might want to skip this for better UX)
+  if (loading) {
+    return (
+      <section className="w-full bg-gradient-to-r from-purple-400 to-purple-600 py-16 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto flex items-center justify-center h-32">
+          <AnimatedView
+            animationData={shoesLoader}
+            height={128}
+            width={128}
+          />
+        </div>
+      </section>
+    );
+  }
 
-    fetchShowcaseSection();
-  }, []);
-
-  if (!showcaseData) {
-    // Don't render anything if no active showcase content
+  // Don't render anything if no active showcase content or error
+  if (!showcaseData || error) {
     return null;
   }
 
