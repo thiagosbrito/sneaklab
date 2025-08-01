@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import useSupabaseBrowser from "@/utils/supabase/client";
+import { upsertHeroSectionAction } from "@/app/actions";
 
 interface HeroSectionFormProps {
   initialData?: {
@@ -57,22 +58,27 @@ export default function HeroSectionForm({ initialData, onSave }: HeroSectionForm
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
 
-    const snakeCaseData = {
-      background_image_url: formData.backgroundImageUrl,
-      hero_title: formData.heroTitle,
-      hero_subtitle: formData.heroSubtitle,
-      cta_text: formData.ctaText,
-      cta_redirect_to: formData.ctaRedirectTo,
-    };
+    try {
+      const submitData = new FormData();
+      submitData.append('heroTitle', formData.heroTitle);
+      submitData.append('heroSubtitle', formData.heroSubtitle);
+      submitData.append('backgroundImageUrl', formData.backgroundImageUrl);
+      submitData.append('ctaText', formData.ctaText);
+      submitData.append('ctaRedirectTo', formData.ctaRedirectTo);
 
-    const { error } = await supabase.from("hero_section").upsert([snakeCaseData]);
+      const result = await upsertHeroSectionAction(submitData);
 
-    if (error) {
-      console.error("Error saving hero section:", error.message);
-    } else {
-      alert("Hero section saved successfully!");
-      onSave();
+      if (result.error) {
+        setError(result.error);
+      } else {
+        alert("Hero section saved successfully!");
+        onSave();
+      }
+    } catch (error) {
+      console.error("Error saving hero section:", error);
+      setError("Failed to save hero section");
     }
   };
 

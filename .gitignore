@@ -36,7 +36,38 @@ yarn-error.log*
 # vercel
 .vercel
 
-# typescript
+# typescript  
 *.tsbuildinfo
 next-env.d.ts
-*.md
+
+# Supabase
+/supabase/.temp/
+/supabase/config.toml
+/supabase/.branches/
+/supabase/.git/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+*.log
+logs/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# pnpm
+.pnpm-debug.log*
+
+# Drizzle migrations (if auto-generated)
+/drizzle/
+/docs/

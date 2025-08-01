@@ -3,14 +3,14 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import useSupabaseBrowser from '@/utils/supabase/client';
+import { upsertAboutUsSectionAction } from '@/app/actions';
 
 export default function AboutUsSectionPage() {
-  const supabase = useSupabaseBrowser();
   const [formData, setFormData] = useState({
     title: '',
     description: '',
   });
+  const [error, setError] = useState<string | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -19,11 +19,24 @@ export default function AboutUsSectionPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const { error } = await supabase.from('about_us_section').insert([formData]);
-    if (error) {
-      console.error('Error saving About Us section:', error.message);
-    } else {
-      alert('About Us section saved successfully!');
+    setError(null);
+
+    try {
+      const submitData = new FormData();
+      submitData.append('title', formData.title);
+      submitData.append('description', formData.description);
+
+      const result = await upsertAboutUsSectionAction(submitData);
+
+      if (result.error) {
+        setError(result.error);
+      } else {
+        alert('About Us section saved successfully!');
+        setFormData({ title: '', description: '' });
+      }
+    } catch (error) {
+      console.error('Error saving About Us section:', error);
+      setError('Failed to save about us section');
     }
   };
 
@@ -53,6 +66,11 @@ export default function AboutUsSectionPage() {
             required
           />
         </div>
+        {error && (
+          <div className="text-red-500 text-sm p-2 bg-red-50 rounded">
+            {error}
+          </div>
+        )}
         <Button type="submit">Save</Button>
       </form>
     </div>

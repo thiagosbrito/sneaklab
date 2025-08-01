@@ -4,7 +4,6 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import DashboardSheet from "@/components/ui/DashboardSheet";
 import HeroSectionForm from "@/components/admin/content-management/HeroSectionForm";
-import useSupabaseBrowser from "@/utils/supabase/client";
 
 export default function HeroSectionPage() {
   const [formData, setFormData] = useState({
@@ -17,30 +16,35 @@ export default function HeroSectionPage() {
   const [hasContent, setHasContent] = useState(false);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
 
-  const supabase = useSupabaseBrowser();
-
   useEffect(() => {
     const fetchHeroSection = async () => {
-      const { data, error } = await supabase.from("hero_section").select("*").single();
-
-      if (error) {
-        console.error("Error fetching hero section:", error.message);
-      } else if (data) {
-        setFormData({
-          backgroundImageUrl: data.background_image_url || "",
-          heroTitle: data.hero_title || "",
-          heroSubtitle: data.hero_subtitle || "",
-          ctaText: data.cta_text || "",
-          ctaRedirectTo: data.cta_redirect_to || "",
-        });
-        setHasContent(true);
-      } else {
+      try {
+        const response = await fetch('/api/content/hero');
+        
+        if (response.ok) {
+          const data = await response.json();
+          setFormData({
+            backgroundImageUrl: data.backgroundImageUrl || "",
+            heroTitle: data.heroTitle || "",
+            heroSubtitle: data.heroSubtitle || "",
+            ctaText: data.ctaText || "",
+            ctaRedirectTo: data.ctaRedirectTo || "",
+          });
+          setHasContent(true);
+        } else if (response.status === 404) {
+          setHasContent(false);
+        } else {
+          console.error("Error fetching hero section:", response.statusText);
+          setHasContent(false);
+        }
+      } catch (error) {
+        console.error("Error fetching hero section:", error);
         setHasContent(false);
       }
     };
 
     fetchHeroSection();
-  }, [supabase]);
+  }, []);
 
   const handleSave = () => {
     setIsSheetOpen(false);
