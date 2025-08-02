@@ -6,8 +6,16 @@ primary_region = 'mia'
 [build]
   image = 'n8nio/n8n'
 
+[env]
+  WEBHOOK_URL = "https://n8n-sneaklab.fly.dev"
+  N8N_HOST = "n8n-sneaklab.fly.dev"
+  N8N_PROTOCOL = "https"
+  N8N_PORT = "5678"
+  WHATSAPP_PHONE_NUMBER_ID = "695791806951346"
+  WHATSAPP_ACCESS_TOKEN = "EAAZAH6T2spmwBPBRaWMS5NZA34EOlJPpuZCirCeS2ayYcxSGdLuJZBka4tt1QUZCRWyfmGN13xC960to3PJWeqS6tOzGPU2cbHJZCVF67YhddgsjeZAIJYDHT1zVauckXPl0MneOC6iPPZAx6n2VZCz949YZAobRZBCq43ozCrit3dNsRmS0QUDbNG1LinVfLIAuFZCx9vlzwvjQDzMLsohHDhMGQKdcFQlRj5b3vvtLRAq4pJkZD"
+
 [http_service]
-  internal_port = 8080
+  internal_port = 5678
   force_https = true
   auto_stop_machines = 'stop'
   auto_start_machines = true

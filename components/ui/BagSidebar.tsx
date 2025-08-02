@@ -1,9 +1,11 @@
 "use client";
 
-import React from "react";
-import { useBag } from "@/hooks/bag";
+import React, { useState, useEffect, useCallback } from "react";
+import { useBag } from "@/contexts/bag";
 import { useAuth } from "@/contexts/auth";
-import { X, Plus, Minus, Trash2 } from "lucide-react";
+import { X, Plus, Minus, Trash2, ShoppingCart } from "lucide-react";
+import { useCreateOrder } from "@/hooks/queries/useOrders";
+import { CreateOrderData } from "@/utils/orders";
 
 interface BagSidebarProps {
     isOpen: boolean;
@@ -13,6 +15,58 @@ interface BagSidebarProps {
 const BagSidebar: React.FC<BagSidebarProps> = ({ isOpen, onClose }) => {
     const { bag, updateQuantity, removeFromBag, clearBag, totalItems, totalPrice } = useBag();
     const { user } = useAuth();
+    const [showSuccess, setShowSuccess] = useState(false);
+    
+    // React Query mutation for creating orders
+    const createOrderMutation = useCreateOrder();
+
+    const handleCreateOrder = () => {
+        if (!user || bag.length === 0 || createOrderMutation.isPending) return;
+
+        // Transform bag items to order format
+        const orderData: CreateOrderData = {
+            items: bag.map(item => ({
+                product_id: item.id,
+                quantity: item.quantity,
+                base_price: parseFloat(item.price?.replace(/[^0-9.-]+/g, "") || "0"),
+                customization_details: {
+                    notes: "Standard order from bag",
+                    special_instructions: ""
+                },
+                customization_fee: 0
+            })),
+            notes: `Order created from shopping bag with ${totalItems} items`
+        };
+
+        // Use React Query mutation
+        createOrderMutation.mutate(orderData);
+    };
+
+    // Handle successful order creation
+    useEffect(() => {
+        if (createOrderMutation.isSuccess) {
+            // Clear the bag and show success message
+            clearBag(true); // isOrderCompletion = true
+            setShowSuccess(true);
+            
+            // Auto close after 3 seconds
+            const timer = setTimeout(() => {
+                setShowSuccess(false);
+                onClose();
+                createOrderMutation.reset(); // Reset mutation state
+            }, 3000);
+
+            return () => clearTimeout(timer);
+        }
+    }, [createOrderMutation.isSuccess]);
+
+    // Handle error
+    useEffect(() => {
+        if (createOrderMutation.isError) {
+            console.error('Error creating order:', createOrderMutation.error);
+            alert('Erro ao criar pedido. Tente novamente.');
+        }
+    }, [createOrderMutation.isError]);
 
     if (!isOpen) return null;
 
@@ -112,21 +166,52 @@ const BagSidebar: React.FC<BagSidebarProps> = ({ isOpen, onClose }) => {
                     {/* Footer */}
                     {bag.length > 0 && (
                         <div className="border-t dark:border-gray-700 p-4 space-y-4">
-                            <div className="flex justify-between items-center">
-                                <span className="text-lg font-semibold text-gray-900 dark:text-white">
-                                    Total: R$ {totalPrice.toFixed(2)}
-                                </span>
-                                <button
-                                    onClick={clearBag}
-                                    className="text-sm text-red-500 hover:text-red-700"
-                                >
-                                    Limpar Bag
-                                </button>
-                            </div>
-                            
-                            <button className="w-full bg-black text-white py-3 rounded-lg hover:bg-gray-800 transition-colors">
-                                Fechar Pedido
-                            </button>
+                            {showSuccess ? (
+                                <div className="text-center py-4">
+                                    <div className="w-16 h-16 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                                        <ShoppingCart className="w-8 h-8 text-green-600 dark:text-green-400" />
+                                    </div>
+                                    <h3 className="text-lg font-semibold text-green-600 dark:text-green-400 mb-2">
+                                        Pedido Criado!
+                                    </h3>
+                                    <p className="text-sm text-gray-600 dark:text-gray-300">
+                                        Seu pedido foi criado com sucesso. Nossa equipe entrará em contato via WhatsApp.
+                                    </p>
+                                </div>
+                            ) : (
+                                <>
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-lg font-semibold text-gray-900 dark:text-white">
+                                            Total: R$ {totalPrice.toFixed(2)}
+                                        </span>
+                                        <button
+                                            onClick={() => clearBag()}
+                                            className="text-sm text-red-500 hover:text-red-700"
+                                            disabled={createOrderMutation.isPending}
+                                        >
+                                            Limpar Bag
+                                        </button>
+                                    </div>
+                                    
+                                    <button 
+                                        onClick={handleCreateOrder}
+                                        disabled={createOrderMutation.isPending || bag.length === 0}
+                                        className="w-full bg-black text-white py-3 rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                    >
+                                        {createOrderMutation.isPending ? (
+                                            <>
+                                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                                Criando Pedido...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <ShoppingCart className="w-4 h-4" />
+                                                Fechar Pedido
+                                            </>
+                                        )}
+                                    </button>
+                                </>
+                            )}
                         </div>
                     )}
                 </div>

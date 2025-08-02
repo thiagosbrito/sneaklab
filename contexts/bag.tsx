@@ -1,21 +1,23 @@
 "use client";
 
-import React, { createContext, useState, useContext, useEffect } from "react";
+import React, { createContext, useContext, useMemo, useCallback } from "react";
 import { useAuth } from "@/contexts/auth";
-import { syncBagToDatabase, loadBagFromDatabase } from "@/utils/bag-sync";
+import { useBagQuery, useSyncBag, useClearBag } from "@/hooks/queries/useBag";
 import { Product } from "@/db/schema";
 
-interface BagItem extends Product {
+interface BagItemWithProduct extends Product {
     quantity: number;
     addedAt: string;
 }
 
 interface BagContextType {
-    bag: BagItem[];
+    bag: BagItemWithProduct[];
     addToBag: (product: Product, quantity?: number) => void;
     updateQuantity: (productId: string, quantity: number) => void;
     removeFromBag: (productId: string) => void;
-    clearBag: () => void;
+    clearBag: (isOrderCompletion?: boolean) => void;
+    getBagItemQuantity: (productId: string) => number;
+    isInBag: (productId: string) => boolean;
     isLoading: boolean;
     totalItems: number;
     totalPrice: number;
@@ -24,140 +26,207 @@ interface BagContextType {
 export const BagContext = createContext<BagContextType | undefined>(undefined);
 
 export const BagProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [bag, setBag] = useState<BagItem[]>([]);
-    const [isLoading, setIsLoading] = useState(false);
-    const [isInitialized, setIsInitialized] = useState(false);
     const { user } = useAuth();
+    
+    // React Query hooks
+    const { data: bagData = [], isLoading } = useBagQuery(!!user);
+    const syncBagMutation = useSyncBag();
+    const clearBagMutation = useClearBag();
 
-    // Reset initialization when user changes (login/logout/switch users)
-    useEffect(() => {
-        setIsInitialized(false);
-    }, [user?.id]);
+    // Helper function to transform bag data
+    const transformBagData = useCallback((data: any[]): BagItemWithProduct[] => 
+        data.map(item => ({
+            ...item,
+            // Add default product properties if missing
+            name: item.name || 'Unknown Product',
+            price: item.price || '0',
+            description: item.description || '',
+            imageURL: item.imageURL || [],
+            isAvailable: item.isAvailable ?? true,
+            categoryID: item.categoryID || '',
+            brandID: item.brandID || '',
+            promoPrice: item.promoPrice || null,
+            createdAt: item.createdAt || new Date(),
+        } as BagItemWithProduct))
+    , []);
 
-    // Load bag from localStorage on mount, then sync with Supabase if authenticated
-    useEffect(() => {
-        const loadInitialBag = async () => {
-            setIsLoading(true);
-            try {
-                if (user) {
-                    // For authenticated users, use user-specific localStorage key
-                    const userBagKey = `sneaklab-shopping-bag-${user.id}`;
-                    const savedBag = localStorage.getItem(userBagKey);
-                    const localBag = savedBag ? JSON.parse(savedBag) : [];
-                    setBag(localBag);
+    // Memoized bag data transformation
+    const bag: BagItemWithProduct[] = useMemo(() => transformBagData(bagData), [bagData, transformBagData]);
 
-                    try {
-                        const databaseBag = await loadBagFromDatabase(user.id);
-                        
-                        if (databaseBag.length > 0 && localBag.length === 0) {
-                            // User has a bag in database but not locally, use database data
-                            setBag(databaseBag);
-                            localStorage.setItem(userBagKey, JSON.stringify(databaseBag));
-                        } else if (localBag.length > 0) {
-                            // User has local bag, sync it to database
-                            await syncBagToDatabase(user.id, localBag);
-                        }
-                    } catch (databaseError) {
-                        console.log('Database sync failed, continuing with localStorage:', databaseError);
-                        // Continue with localStorage data, database is just backup
-                    }
-                } else {
-                    // For unauthenticated users, use anonymous bag (clear it when they log out)
-                    setBag([]);
-                }
-            } catch (error) {
-                console.error('Error loading bag:', error);
-                setBag([]);
-            }
-            setIsLoading(false);
-            setIsInitialized(true);
-        };
-
-        if (!isInitialized) {
-            loadInitialBag();
-        }
-    }, [user, isInitialized]);
-
-    // Save bag to localStorage and sync to database whenever it changes (but not during initial load)
-    useEffect(() => {
-        if (!isInitialized) return; // Don't sync during initial load
+    // Event-driven mutation functions (never called during render)
+    const addToBag = useCallback((product: Product, quantity = 1) => {
+        if (!user) return;
         
-        try {
-            if (user) {
-                // Save to user-specific localStorage key
-                const userBagKey = `sneaklab-shopping-bag-${user.id}`;
-                localStorage.setItem(userBagKey, JSON.stringify(bag));
-                
-                // Sync to database if user is authenticated
-                syncBagToDatabase(user.id, bag);
-            }
-            // Don't save anonymous bags to localStorage
-        } catch (error) {
-            console.error('Error saving bag:', error);
-        }
-    }, [bag, user, isInitialized]);
-
-    const addToBag = (product: Product, quantity = 1) => {
-        setBag((prevBag) => {
-            const existingItem = prevBag.find(item => item.id === product.id);
-            
-            if (existingItem) {
-                return prevBag.map(item =>
-                    item.id === product.id
-                        ? { ...item, quantity: item.quantity + quantity }
-                        : item
-                );
-            }
-            
-            return [...prevBag, { 
+        const currentBag = transformBagData(bagData);
+        const existingItem = currentBag.find(item => item.id === product.id);
+        
+        let newBag: BagItemWithProduct[];
+        if (existingItem) {
+            newBag = currentBag.map(item =>
+                item.id === product.id
+                    ? { ...item, quantity: item.quantity + quantity }
+                    : item
+            );
+        } else {
+            newBag = [...currentBag, { 
                 ...product, 
                 quantity, 
                 addedAt: new Date().toISOString() 
             }];
-        });
-    };
-
-    const updateQuantity = (productId: string, quantity: number) => {
-        if (quantity <= 0) {
-            removeFromBag(productId);
-            return;
         }
         
-        setBag(prevBag =>
-            prevBag.map(item =>
+        // Transform to server format and sync
+        const bagItems = newBag.map(item => ({
+            id: item.id,
+            quantity: item.quantity,
+            addedAt: item.addedAt,
+            name: item.name,
+            price: item.price,
+            imageURL: item.imageURL,
+            isAvailable: item.isAvailable,
+            categoryID: item.categoryID,
+            brandID: item.brandID,
+            description: item.description,
+            promoPrice: item.promoPrice,
+            createdAt: item.createdAt,
+        }));
+
+        syncBagMutation.mutate(bagItems);
+    }, [user, bagData, transformBagData, syncBagMutation]);
+
+    const updateQuantity = useCallback((productId: string, quantity: number) => {
+        if (!user) return;
+        
+        const currentBag = transformBagData(bagData);
+        
+        let newBag: BagItemWithProduct[];
+        if (quantity <= 0) {
+            // Remove item if quantity is 0 or negative
+            newBag = currentBag.filter(item => item.id !== productId);
+        } else {
+            // Update quantity
+            newBag = currentBag.map(item =>
                 item.id === productId ? { ...item, quantity } : item
-            )
-        );
-    };
+            );
+        }
+        
+        // Transform to server format and sync
+        const bagItems = newBag.map(item => ({
+            id: item.id,
+            quantity: item.quantity,
+            addedAt: item.addedAt,
+            name: item.name,
+            price: item.price,
+            imageURL: item.imageURL,
+            isAvailable: item.isAvailable,
+            categoryID: item.categoryID,
+            brandID: item.brandID,
+            description: item.description,
+            promoPrice: item.promoPrice,
+            createdAt: item.createdAt,
+        }));
 
-    const removeFromBag = (productId: string) => {
-        setBag(prevBag => prevBag.filter(item => item.id !== productId));
-    };
+        syncBagMutation.mutate(bagItems);
+    }, [user, bagData, transformBagData, syncBagMutation]);
 
-    const clearBag = () => {
-        setBag([]);
-    };
+    const removeFromBag = useCallback((productId: string) => {
+        if (!user) return;
+        
+        const currentBag = transformBagData(bagData);
+        const newBag = currentBag.filter(item => item.id !== productId);
+        
+        // Transform to server format and sync
+        const bagItems = newBag.map(item => ({
+            id: item.id,
+            quantity: item.quantity,
+            addedAt: item.addedAt,
+            name: item.name,
+            price: item.price,
+            imageURL: item.imageURL,
+            isAvailable: item.isAvailable,
+            categoryID: item.categoryID,
+            brandID: item.brandID,
+            description: item.description,
+            promoPrice: item.promoPrice,
+            createdAt: item.createdAt,
+        }));
 
-    const parsedPrice = (item: string): number => {
+        syncBagMutation.mutate(bagItems);
+    }, [user, bagData, transformBagData, syncBagMutation]);
+
+    const clearBag = useCallback((isOrderCompletion = false) => {
+        if (!user) return;
+        
+        if (isOrderCompletion) {
+            // Use the clear bag mutation for order completion
+            clearBagMutation.mutate();
+        } else {
+            // Use sync with empty array for manual clear
+            syncBagMutation.mutate([]);
+        }
+    }, [user, syncBagMutation, clearBagMutation]);
+
+    // Memoized calculated values
+    const parsedPrice = useCallback((item: string): number => {
         if (item === '') return 0;
         return parseFloat(item.replace(/[^0-9.-]+/g, ""));
-    }
+    }, []);
 
-    const totalItems = bag.reduce((total, item) => total + item.quantity, 0);
-    const totalPrice = bag.reduce((total, item) => total + (parsedPrice(item.price ?? '') * item.quantity), 0);
+    const totalItems = useMemo(() => 
+        bag.reduce((total, item) => total + item.quantity, 0)
+    , [bag]);
+    
+    const totalPrice = useMemo(() => 
+        bag.reduce((total, item) => total + (parsedPrice(item.price ?? '') * item.quantity), 0)
+    , [bag, parsedPrice]);
+
+    // Helper functions
+    const getBagItemQuantity = useCallback((productId: string) => {
+        const item = bagData.find(item => item.id === productId);
+        return item ? item.quantity : 0;
+    }, [bagData]);
+
+    const isInBag = useCallback((productId: string) => {
+        return bagData.some(item => item.id === productId);
+    }, [bagData]);
+
+    const contextValue = useMemo(() => ({
+        bag, 
+        addToBag, 
+        updateQuantity, 
+        removeFromBag, 
+        clearBag, 
+        getBagItemQuantity,
+        isInBag,
+        isLoading: isLoading || syncBagMutation.isPending || clearBagMutation.isPending,
+        totalItems,
+        totalPrice
+    }), [
+        bag, 
+        addToBag, 
+        updateQuantity, 
+        removeFromBag, 
+        clearBag, 
+        getBagItemQuantity,
+        isInBag,
+        isLoading, 
+        syncBagMutation.isPending, 
+        clearBagMutation.isPending,
+        totalItems,
+        totalPrice
+    ]);
 
     return (
-        <BagContext.Provider value={{ 
-            bag, 
-            addToBag, 
-            updateQuantity, 
-            removeFromBag, 
-            clearBag, 
-            isLoading,
-            totalItems,
-            totalPrice
-        }}>
+        <BagContext.Provider value={contextValue}>
             {children}
         </BagContext.Provider>
     );
+};
+
+export const useBag = () => {
+    const context = useContext(BagContext);
+    if (context === undefined) {
+        throw new Error('useBag must be used within a BagProvider');
+    }
+    return context;
 };

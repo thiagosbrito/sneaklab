@@ -43,3 +43,19 @@ export {
   useCategoryName,
   useProductDisplayNames
 } from './useLookups';
+
+// Order queries
+export {
+  useCreateOrder,
+  useUpdateOrderStatus,
+  useUserOrders,
+  useUserOrdersState
+} from './useOrders';
+
+// Bag queries
+export {
+  useBagQuery,
+  useSyncBag,
+  useClearBag,
+  useBagState
+} from './useBag';

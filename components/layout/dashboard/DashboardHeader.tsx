@@ -4,6 +4,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { Search, MessageSquare, Bell, User } from 'lucide-react';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
 import { formatCurrencyPortuguese } from '@/utils/currency-formatter';
+import { NotificationBell } from '@/components/ui/NotificationBell';
 import UserDropdown from './UserDropdown';
 
 // Helper function to get page title from pathname
@@ -81,11 +82,8 @@ export default function DashboardHeader() {
             <MessageSquare className="w-5 h-5" />
           </button>
 
-          {/* Notification Icon */}
-          <button className="p-2 text-gray-400 hover:text-gray-600 transition-colors relative">
-            <Bell className="w-5 h-5" />
-            <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
-          </button>
+          {/* Notification Bell */}
+          <NotificationBell className="text-gray-400 hover:text-gray-600" />
 
           {/* User Profile Dropdown */}
           <div className="flex items-center space-x-2">
