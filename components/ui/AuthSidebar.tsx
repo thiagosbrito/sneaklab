@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import useSupabaseBrowser from '@/utils/supabase/client';
+import { signupWithProfileAction } from '@/lib/actions/auth-actions';
 
 interface AuthSidebarProps {
   isOpen: boolean;
@@ -34,6 +35,7 @@ export const AuthSidebar: React.FC<AuthSidebarProps> = ({ isOpen, onClose }) => 
     try {
       if (isSignUp) {
         const confirmPassword = formData.get('confirmPassword') as string;
+        const fullName = formData.get('fullName') as string;
         
         if (password !== confirmPassword) {
           setError('Passwords do not match');
@@ -41,20 +43,13 @@ export const AuthSidebar: React.FC<AuthSidebarProps> = ({ isOpen, onClose }) => 
           return;
         }
         
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: {
-              role: 'CUSTOMER'
-            }
-          }
-        });
+        // Use the new signup action that creates both auth user and profile
+        const result = await signupWithProfileAction(email, password, fullName);
 
-        if (error) {
-          setError(error.message);
+        if (!result.success) {
+          setError(result.error || 'Signup failed');
         } else {
-          setSuccess('Thanks for signing up! Please check your email for a verification link.');
+          setSuccess(result.message || 'Account created successfully!');
         }
       } else {
         const { error } = await supabase.auth.signInWithPassword({
@@ -171,10 +166,24 @@ export const AuthSidebar: React.FC<AuthSidebarProps> = ({ isOpen, onClose }) => 
               </div>
 
               {isSignUp && (
-                <div>
-                  <Label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
-                    Confirm Password
-                  </Label>
+                <>
+                  <div>
+                    <Label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-1">
+                      Full Name (Optional)
+                    </Label>
+                    <Input
+                      type="text"
+                      id="fullName"
+                      name="fullName"
+                      className="w-full"
+                      placeholder="Enter your full name"
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
+                      Confirm Password
+                    </Label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                     <Input
@@ -198,6 +207,7 @@ export const AuthSidebar: React.FC<AuthSidebarProps> = ({ isOpen, onClose }) => 
                     </button>
                   </div>
                 </div>
+                </>
               )}
 
               <Button

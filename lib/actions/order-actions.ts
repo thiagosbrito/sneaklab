@@ -2,11 +2,12 @@
 
 import { createClient } from '@/utils/supabase/server';
 import { db } from '@/db';
-import { orders, orderItems, profiles } from '@/db/schema';
+import { orders, orderItems, profiles, type Profile } from '@/db/schema';
 import { eq, desc } from 'drizzle-orm';
 import { CreateOrderData, OrderItem } from '@/utils/orders';
 import { revalidateTag } from 'next/cache';
 import { sendOrderNotification, sendAdminNotification } from '@/lib/notifications';
+import { getOrCreateUserProfile } from './auth-actions';
 
 type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 
@@ -76,39 +77,11 @@ export async function createOrderAction(orderData: CreateOrderData) {
       throw new Error('Authentication required')
     }
 
-    // Get or create user profile
-    const { data: existingProfile } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user.id)
-      .single()
-
-    let profile = existingProfile
+    // Get or create user profile using the centralized function
+    let profile: Profile | null = await getOrCreateUserProfile(user.id, user.email || undefined)
     
-    // If no profile exists, create one from user metadata
-    if (!profile && user.user_metadata) {
-      const profileData = {
-        full_name: user.user_metadata.full_name || user.email?.split('@')[0] || '',
-        phone: user.user_metadata.phone || '',
-        address: user.user_metadata.address || null,
-        updated_at: new Date().toISOString()
-      }
-
-      const { data: newProfile, error: profileError } = await supabase
-        .from('profiles')
-        .upsert({
-          id: user.id,
-          ...profileData
-        })
-        .select()
-        .single()
-
-      if (profileError) {
-        console.error('Profile creation error:', profileError)
-        throw new Error('Failed to create user profile')
-      }
-      
-      profile = newProfile
+    if (!profile) {
+      throw new Error('Failed to create or retrieve user profile')
     }
 
     // Calculate order totals
@@ -154,30 +127,41 @@ export async function createOrderAction(orderData: CreateOrderData) {
         ...newOrder,
         items: orderItemsData
       },
-      customer_data: profile ? {
-        name: profile.full_name || user.email || 'Customer',
+      customer_data: {
+        name: profile.fullName || user.email || 'Customer',
         phone: profile.phone || '',
         address: profile.address as Json,
-        email: user.email
-      } : {
-        name: user.email || 'Customer',
-        phone: '',
-        address: null,
         email: user.email
       }
     })
 
-    // Send notifications
-    await sendOrderNotification(newOrder.id, user.id, 'pending');
-    await sendAdminNotification(
-      'New Order Created',
-      `A new order #${newOrder.id} has been created by ${profile?.full_name || user.email}.`,
-      'order',
-      'medium',
-      newOrder.id,
-      'order',
-      { orderValue: totalAmount }
-    );
+    // Send notifications based on user role
+    const isAdmin = profile?.role === 'ADMIN';
+    
+    if (isAdmin) {
+      // Admin users only get the admin notification, not the customer notification
+      await sendAdminNotification(
+        'New Order Created',
+        `A new order #${newOrder.id} has been created by ${profile?.fullName || user.email}.`,
+        'order',
+        'medium',
+        newOrder.id,
+        'order',
+        { orderValue: totalAmount, isAdminNotification: true }
+      );
+    } else {
+      // Regular customers get the customer notification, and admins get the admin notification
+      await sendOrderNotification(newOrder.id, user.id, 'pending');
+      await sendAdminNotification(
+        'New Order Created',
+        `A new order #${newOrder.id} has been created by ${profile?.fullName || user.email}.`,
+        'order',
+        'medium',
+        newOrder.id,
+        'order',
+        { orderValue: totalAmount }
+      );
+    }
 
     // Revalidate cache
     revalidateTag('user-orders')
@@ -291,8 +275,15 @@ export async function updateOrderStatusAction(orderId: string, status: string, n
       })
     }
 
-    // Send status change notifications
-    await sendOrderNotification(orderId, updatedOrder.userId, status, currentOrder.status);
+    // Send status change notifications based on customer role
+    const isCustomerAdmin = userProfile?.role === 'ADMIN';
+    
+    if (!isCustomerAdmin) {
+      // Only send customer notification if they're not an admin
+      await sendOrderNotification(orderId, updatedOrder.userId, status, currentOrder.status);
+    }
+    
+    // Always send admin notification for status changes
     await sendAdminNotification(
       'Order Status Updated',
       `Order #${orderId} status changed from ${currentOrder.status} to ${status}.`,
@@ -300,7 +291,7 @@ export async function updateOrderStatusAction(orderId: string, status: string, n
       'medium',
       orderId,
       'order',
-      { previousStatus: currentOrder.status, newStatus: status }
+      { previousStatus: currentOrder.status, newStatus: status, customerIsAdmin: isCustomerAdmin }
     );
 
     // Revalidate cache
