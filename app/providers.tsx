@@ -5,6 +5,7 @@ import { AuthProvider } from '@/contexts/auth'
 import { BagProvider } from '@/contexts/bag'
 import { LoginDialogProvider } from '@/contexts/loginDialog'
 import { NotificationProvider } from '@/contexts/notifications'
+import { MessagingProvider } from '@/contexts/messaging'
 import { AuthSidebar } from '@/components/ui/AuthSidebar'
 import { useLoginDialog } from '@/contexts/loginDialog'
 
@@ -18,12 +19,14 @@ export default function Providers({ children }: { children: React.ReactNode }) {
     <ReactQueryClientProvider>
       <AuthProvider>
         <NotificationProvider>
-          <BagProvider>
-            <LoginDialogProvider>
-              {children}
-              <AuthSidebarWrapper />
-            </LoginDialogProvider>
-          </BagProvider>
+          <MessagingProvider>
+            <BagProvider>
+              <LoginDialogProvider>
+                {children}
+                <AuthSidebarWrapper />
+              </LoginDialogProvider>
+            </BagProvider>
+          </MessagingProvider>
         </NotificationProvider>
       </AuthProvider>
     </ReactQueryClientProvider>

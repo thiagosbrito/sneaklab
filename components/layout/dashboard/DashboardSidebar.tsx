@@ -3,7 +3,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Package, Users, ShoppingCart, BarChart3, Settings, BadgePercent, TableOfContents, Bell } from 'lucide-react'
+import { Package, Users, ShoppingCart, BarChart3, Settings, BadgePercent, TableOfContents, Bell, MessageCircle } from 'lucide-react'
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 
 import type { Database } from '@/utils/supabase/database.types';
@@ -44,6 +44,11 @@ const sidebarItems: SidebarItem[] = [
     href: '/admin/customers',
     icon: Users,
     label: 'Customers',
+  },
+  {
+    href: '/admin/messages',
+    icon: MessageCircle,
+    label: 'Messages',
   },
   {
     href: '/admin/notifications',
