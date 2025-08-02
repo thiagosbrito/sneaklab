@@ -87,10 +87,6 @@ export interface OrderWithItems extends Order {
   items?: OrderItem[]
 }
 
-export interface CreateOrderData {
-  items: OrderItem[]
-  notes?: string
-}
 
 export interface UpdateOrderStatusData {
   status: string

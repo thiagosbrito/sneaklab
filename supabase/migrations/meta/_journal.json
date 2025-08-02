@@ -15,6 +15,13 @@
       "when": 1754073739256,
       "tag": "0001_charming_gateway",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1754158488786,
+      "tag": "0002_round_moondragon",
+      "breakpoints": true
     }
   ]
 }

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { ORDER_STATUSES, type OrderStatus } from '@/utils/orders'
+import { useUpdateOrderStatus } from '@/hooks/queries/useOrders'
 
 interface OrderStatusFormProps {
   orderId: string
@@ -8,9 +9,11 @@ interface OrderStatusFormProps {
 }
 
 export function OrderStatusForm({ orderId, currentStatus, onStatusUpdate }: OrderStatusFormProps) {
-  const [loading, setLoading] = useState(false)
   const [status, setStatus] = useState<OrderStatus>(currentStatus)
   const [notes, setNotes] = useState('')
+  
+  // Use React Query mutation for updating order status
+  const updateOrderStatusMutation = useUpdateOrderStatus()
 
   const statusOptions = [
     { value: ORDER_STATUSES.PENDING, label: 'Pending Review', color: 'bg-gray-500' },
@@ -29,28 +32,14 @@ export function OrderStatusForm({ orderId, currentStatus, onStatusUpdate }: Orde
       return
     }
 
-    setLoading(true)
     try {
-      const response = await fetch(`/api/orders?id=${orderId}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          status,
-          notes: notes || undefined
-        })
+      await updateOrderStatusMutation.mutateAsync({
+        orderId,
+        status,
+        notes: notes || undefined
       })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to update order status')
-      }
-
-      const result = await response.json()
       
       alert('Order status updated successfully!')
-      console.log('Order updated:', result.order)
       
       // Notify parent component
       onStatusUpdate?.(status)
@@ -66,8 +55,6 @@ export function OrderStatusForm({ orderId, currentStatus, onStatusUpdate }: Orde
     } catch (error) {
       console.error('Error updating order status:', error)
       alert(`Failed to update order status: ${error instanceof Error ? error.message : 'Unknown error'}`)
-    } finally {
-      setLoading(false)
     }
   }
 
@@ -90,7 +77,7 @@ export function OrderStatusForm({ orderId, currentStatus, onStatusUpdate }: Orde
             value={status}
             onChange={(e) => setStatus(e.target.value as OrderStatus)}
             className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            disabled={loading}
+            disabled={updateOrderStatusMutation.isPending}
           >
             {statusOptions.map((option) => (
               <option key={option.value} value={option.value}>
@@ -114,7 +101,7 @@ export function OrderStatusForm({ orderId, currentStatus, onStatusUpdate }: Orde
             onChange={(e) => setNotes(e.target.value)}
             placeholder={`Add notes about ${status} status (optional)...`}
             className="w-full border rounded-md px-3 py-2 h-20 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            disabled={loading}
+            disabled={updateOrderStatusMutation.isPending}
           />
           <p className="text-xs text-gray-500 mt-1">
             These notes will be saved as {status}_notes in the database
@@ -137,10 +124,10 @@ export function OrderStatusForm({ orderId, currentStatus, onStatusUpdate }: Orde
 
         <button
           onClick={handleStatusUpdate}
-          disabled={loading || (status === currentStatus && !notes)}
+          disabled={updateOrderStatusMutation.isPending || (status === currentStatus && !notes)}
           className="w-full bg-blue-600 text-white py-2 px-4 rounded-md font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {loading ? 'Updating...' : 'Update Order Status'}
+          {updateOrderStatusMutation.isPending ? 'Updating...' : 'Update Order Status'}
         </button>
       </div>
 

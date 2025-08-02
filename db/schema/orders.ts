@@ -1,6 +1,7 @@
 import { pgTable, text, decimal, timestamp, integer, jsonb, uuid } from 'drizzle-orm/pg-core'
 import { relations, sql } from 'drizzle-orm'
 import { products } from './products'
+import { profiles } from './profiles'
 
 // Customization details interface for the customization_details JSONB field
 export interface CustomizationDetails extends Record<string, string | number | boolean | null | undefined | CustomizationDetails | CustomizationDetails[]> {

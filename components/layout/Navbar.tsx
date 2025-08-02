@@ -9,6 +9,7 @@ import { Category } from '@/db/schema';
 import Link from "next/link";
 import BagSidebar from "../ui/BagSidebar";
 import { AuthSidebar } from "../ui/AuthSidebar";
+import { NotificationBell } from "../ui/NotificationBell";
 import { useAuth } from "@/contexts/auth";
 import useSupabaseBrowser from "@/utils/supabase/client";
 
@@ -126,6 +127,9 @@ export default function Navbar({ menuItems = [] }: NavbarProps) {
                                 <>
                                     {user ? (
                                     <>
+                                        {/* Notifications */}
+                                        <NotificationBell className="text-gray-700 dark:text-gray-200 hover:text-purple-600 dark:hover:text-purple-400" />
+                                        
                                         {/* Shopping Bag */}
                                         <div className="relative">
                                             <button 
@@ -267,6 +271,12 @@ export default function Navbar({ menuItems = [] }: NavbarProps) {
                                 {user && (
                                     <div className="mt-8 pt-6 border-t border-gray-200/20 dark:border-gray-700/30">
                                         <div className="space-y-1">
+                                            {/* Mobile Notifications */}
+                                            <div className="flex items-center gap-3 px-4 py-3">
+                                                <NotificationBell className="text-gray-700 dark:text-gray-200" />
+                                                <span className="text-gray-700 dark:text-gray-200 font-medium">Notificações</span>
+                                            </div>
+                                            
                                             <Link
                                                 href="/wishlist"
                                                 className="flex items-center gap-3 px-4 py-3 text-gray-700 dark:text-gray-200 hover:bg-gray-100/50 dark:hover:bg-gray-800/50 hover:text-purple-600 dark:hover:text-purple-400 rounded-lg transition-colors font-medium"
