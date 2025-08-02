@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { ThemeSwitcher } from "../theme-switcher"
 import Logo from "./Logo"
 import { useBag } from "@/hooks/bag";
-import { ShoppingBag, User, LogOut, Heart, ChevronDown, Menu, X } from "lucide-react";
+import { ShoppingBag, User, LogOut, Heart, ChevronDown, Menu, X, MessageCircle } from "lucide-react";
 import { Category } from '@/db/schema';
 import Link from "next/link";
 import BagSidebar from "../ui/BagSidebar";
@@ -163,6 +163,14 @@ export default function Navbar({ menuItems = [] }: NavbarProps) {
                                             {isUserDropdownOpen && (
                                                 <div className="absolute right-0 mt-2 w-48 bg-white/90 dark:bg-gray-800/90 backdrop-blur-md rounded-lg shadow-xl border border-gray-200/20 dark:border-gray-700/30 py-1 z-30">
                                                     <Link
+                                                        href="/messages"
+                                                        className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100/50 dark:hover:bg-gray-700/50 transition-colors"
+                                                        onClick={() => setIsUserDropdownOpen(false)}
+                                                    >
+                                                        <MessageCircle className="h-4 w-4" />
+                                                        Mensagens
+                                                    </Link>
+                                                    <Link
                                                         href="/wishlist"
                                                         className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100/50 dark:hover:bg-gray-700/50 transition-colors"
                                                         onClick={() => setIsUserDropdownOpen(false)}
@@ -276,6 +284,15 @@ export default function Navbar({ menuItems = [] }: NavbarProps) {
                                                 <NotificationBell className="text-gray-700 dark:text-gray-200" />
                                                 <span className="text-gray-700 dark:text-gray-200 font-medium">Notificações</span>
                                             </div>
+                                            
+                                            <Link
+                                                href="/messages"
+                                                className="flex items-center gap-3 px-4 py-3 text-gray-700 dark:text-gray-200 hover:bg-gray-100/50 dark:hover:bg-gray-800/50 hover:text-purple-600 dark:hover:text-purple-400 rounded-lg transition-colors font-medium"
+                                                onClick={() => setIsMobileMenuOpen(false)}
+                                            >
+                                                <MessageCircle className="w-5 h-5" />
+                                                Mensagens
+                                            </Link>
                                             
                                             <Link
                                                 href="/wishlist"

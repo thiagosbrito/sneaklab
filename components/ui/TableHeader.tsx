@@ -1,5 +1,5 @@
 import { ReactNode } from 'react'
-import { Search, Filter, Plus } from 'lucide-react'
+import { Search, Filter, Plus, LucideIcon } from 'lucide-react'
 
 interface TableHeaderProps {
   title: string
@@ -8,6 +8,7 @@ interface TableHeaderProps {
   onSearchChange: (value: string) => void
   onAddClick?: () => void
   addButtonText?: string
+  addButtonIcon?: LucideIcon
   filterOptions?: {
     label: string
     value: string

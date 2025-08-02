@@ -28,7 +28,7 @@ const monserrat = Montserrat({
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={monserrat.className} suppressHydrationWarning>
-      <body className="w-screen h-screen bg-gradient-to-b from-background to-foreground text-foreground">
+      <body className="w-screen h-screen text-foreground">
         <Providers>
           <ThemeProvider
             attribute="class"

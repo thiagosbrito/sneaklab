@@ -21,8 +21,8 @@ export default function PageContainer({
   const bgClass = background === 'gray' ? 'bg-gray-50' : 'bg-white';
   
   return (
-    <div className={`${bgClass} min-h-screen pt-24`}>
-      <div className="max-w-6xl mx-auto px-4 py-6">
+    <div className={`${bgClass} flex-1 pt-0 flex xl:pt-24`}>
+      <div className="max-w-6xl flex-1 mx-auto px-4 py-6">
         {breadcrumbs && breadcrumbs.length > 0 && (
           <Breadcrumb items={breadcrumbs} />
         )}
@@ -41,8 +41,8 @@ export default function PageContainer({
             )}
           </div>
         )}
-        
-        <div className={className}>
+
+        <div className={`h-full ${className}`}>
           {children}
         </div>
       </div>

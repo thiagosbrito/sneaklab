@@ -22,6 +22,27 @@
       "when": 1754158488786,
       "tag": "0002_round_moondragon",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1754165523929,
+      "tag": "0003_gray_the_hood",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1754170064893,
+      "tag": "0004_cheerful_queen_noir",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1754170186087,
+      "tag": "0005_chief_the_stranger",
+      "breakpoints": true
     }
   ]
 }
