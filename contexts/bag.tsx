@@ -1,9 +1,10 @@
 "use client";
 
-import React, { createContext, useContext, useMemo, useCallback } from "react";
+import React, { createContext, useContext, useMemo, useCallback, useRef } from "react";
 import { useAuth } from "@/contexts/auth";
 import { useBagQuery, useSyncBag, useClearBag } from "@/hooks/queries/useBag";
 import { Product } from "@/db/schema";
+import { BagItem } from "@/lib/actions/bag-actions";
 
 interface BagItemWithProduct extends Product {
     quantity: number;
@@ -32,28 +33,36 @@ export const BagProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const { data: bagData = [], isLoading } = useBagQuery(!!user);
     const syncBagMutation = useSyncBag();
     const clearBagMutation = useClearBag();
+    
+    // Debounced sync for rapid operations
+    const syncTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const lastBagStateRef = useRef<BagItem[]>([]);
 
-    // Helper function to transform bag data
-    const transformBagData = useCallback((data: any[]): BagItemWithProduct[] => 
-        data.map(item => ({
-            ...item,
-            // Add default product properties if missing
-            name: item.name || 'Unknown Product',
-            price: item.price || '0',
-            description: item.description || '',
-            imageURL: item.imageURL || [],
-            isAvailable: item.isAvailable ?? true,
-            categoryID: item.categoryID || '',
-            brandID: item.brandID || '',
-            promoPrice: item.promoPrice || null,
-            createdAt: item.createdAt || new Date(),
-        } as BagItemWithProduct))
+    // Helper function to transform bag data - now properly typed
+    const transformBagData = useCallback((data: BagItem[]): BagItemWithProduct[] => 
+        data.map(item => ({ ...item } as BagItemWithProduct))
     , []);
+
+    // Helper to convert BagItemWithProduct to BagItem for API calls
+    const toBagItem = useCallback((item: BagItemWithProduct): BagItem => ({
+        id: item.id,
+        quantity: item.quantity,
+        addedAt: item.addedAt,
+        name: item.name,
+        price: item.price ?? '0',
+        imageURL: item.imageURL ?? [],
+        isAvailable: item.isAvailable,
+        categoryID: item.categoryID,
+        brandID: item.brandID,
+        description: item.description,
+        promoPrice: item.promoPrice,
+        createdAt: item.createdAt,
+    }), []);
 
     // Memoized bag data transformation
     const bag: BagItemWithProduct[] = useMemo(() => transformBagData(bagData), [bagData, transformBagData]);
 
-    // Event-driven mutation functions (never called during render)
+    // Event-driven mutation functions with optimistic updates
     const addToBag = useCallback((product: Product, quantity = 1) => {
         if (!user) return;
         
@@ -75,24 +84,12 @@ export const BagProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             }];
         }
         
-        // Transform to server format and sync
-        const bagItems = newBag.map(item => ({
-            id: item.id,
-            quantity: item.quantity,
-            addedAt: item.addedAt,
-            name: item.name,
-            price: item.price,
-            imageURL: item.imageURL,
-            isAvailable: item.isAvailable,
-            categoryID: item.categoryID,
-            brandID: item.brandID,
-            description: item.description,
-            promoPrice: item.promoPrice,
-            createdAt: item.createdAt,
-        }));
+        // Convert to BagItem format for API
+        const optimisticBagItems: BagItem[] = newBag.map(toBagItem);
 
-        syncBagMutation.mutate(bagItems);
-    }, [user, bagData, transformBagData, syncBagMutation]);
+        // Update cache immediately for instant UI response
+        syncBagMutation.mutate(optimisticBagItems);
+    }, [user, bagData, transformBagData, syncBagMutation, toBagItem]);
 
     const updateQuantity = useCallback((productId: string, quantity: number) => {
         if (!user) return;
@@ -110,24 +107,11 @@ export const BagProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             );
         }
         
-        // Transform to server format and sync
-        const bagItems = newBag.map(item => ({
-            id: item.id,
-            quantity: item.quantity,
-            addedAt: item.addedAt,
-            name: item.name,
-            price: item.price,
-            imageURL: item.imageURL,
-            isAvailable: item.isAvailable,
-            categoryID: item.categoryID,
-            brandID: item.brandID,
-            description: item.description,
-            promoPrice: item.promoPrice,
-            createdAt: item.createdAt,
-        }));
+        // Convert to BagItem format for API
+        const optimisticBagItems: BagItem[] = newBag.map(toBagItem);
 
-        syncBagMutation.mutate(bagItems);
-    }, [user, bagData, transformBagData, syncBagMutation]);
+        syncBagMutation.mutate(optimisticBagItems);
+    }, [user, bagData, transformBagData, syncBagMutation, toBagItem]);
 
     const removeFromBag = useCallback((productId: string) => {
         if (!user) return;
@@ -135,24 +119,11 @@ export const BagProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const currentBag = transformBagData(bagData);
         const newBag = currentBag.filter(item => item.id !== productId);
         
-        // Transform to server format and sync
-        const bagItems = newBag.map(item => ({
-            id: item.id,
-            quantity: item.quantity,
-            addedAt: item.addedAt,
-            name: item.name,
-            price: item.price,
-            imageURL: item.imageURL,
-            isAvailable: item.isAvailable,
-            categoryID: item.categoryID,
-            brandID: item.brandID,
-            description: item.description,
-            promoPrice: item.promoPrice,
-            createdAt: item.createdAt,
-        }));
+        // Convert to BagItem format for API
+        const optimisticBagItems: BagItem[] = newBag.map(toBagItem);
 
-        syncBagMutation.mutate(bagItems);
-    }, [user, bagData, transformBagData, syncBagMutation]);
+        syncBagMutation.mutate(optimisticBagItems);
+    }, [user, bagData, transformBagData, syncBagMutation, toBagItem]);
 
     const clearBag = useCallback((isOrderCompletion = false) => {
         if (!user) return;
@@ -180,15 +151,23 @@ export const BagProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         bag.reduce((total, item) => total + (parsedPrice(item.price ?? '') * item.quantity), 0)
     , [bag, parsedPrice]);
 
-    // Helper functions
-    const getBagItemQuantity = useCallback((productId: string) => {
-        const item = bagData.find(item => item.id === productId);
-        return item ? item.quantity : 0;
+    // Optimized helper functions with memoized bag lookup
+    const bagLookupMap = useMemo(() => {
+        const map = new Map();
+        bagData.forEach(item => {
+            map.set(item.id, item);
+        });
+        return map;
     }, [bagData]);
 
+    const getBagItemQuantity = useCallback((productId: string) => {
+        const item = bagLookupMap.get(productId);
+        return item ? item.quantity : 0;
+    }, [bagLookupMap]);
+
     const isInBag = useCallback((productId: string) => {
-        return bagData.some(item => item.id === productId);
-    }, [bagData]);
+        return bagLookupMap.has(productId);
+    }, [bagLookupMap]);
 
     const contextValue = useMemo(() => ({
         bag, 

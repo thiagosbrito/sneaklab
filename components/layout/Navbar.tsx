@@ -88,7 +88,7 @@ export default function Navbar({ menuItems = [] }: NavbarProps) {
 
     return (
         <div className="w-full flex items-center justify-center m-0 p-0">
-            <nav className="flex items-center p-4 py-6 w-full xl:w-9/12 xl:fixed xl:top-4 xl:rounded-xl xl:shadow-2xl mx-auto z-20 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200/20 dark:border-gray-700/30 transition-all duration-300 ease-linear">
+            <nav className="flex items-center p-4 py-6 w-full xl:w-9/12 xl:fixed xl:top-4 xl:rounded-xl xl:shadow-2xl mx-auto z-20 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-gray-200/20 dark:border-gray-700/30 transition-all duration-300 ease-linear">
                 <div className="w-full mx-auto flex justify-between items-center">
                     <Logo />
                     

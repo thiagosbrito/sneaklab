@@ -3,34 +3,55 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { syncBagAction, loadBagAction, clearBagAction, BagItem } from '@/lib/actions/bag-actions';
 
-// Load bag query
+// Load bag query with enhanced caching
 export function useBagQuery(enabled: boolean = true) {
   return useQuery({
     queryKey: ['bag'],
     queryFn: loadBagAction,
     enabled,
-    staleTime: 5 * 60 * 1000, // 5 minutes - bag doesn't change frequently
-    gcTime: 10 * 60 * 1000,   // 10 minutes
+    staleTime: 2 * 60 * 1000,   // 2 minutes - balance freshness with performance
+    gcTime: 15 * 60 * 1000,     // 15 minutes - keep in cache longer
+    refetchOnWindowFocus: false, // Don't refetch on window focus for better UX
+    refetchOnMount: false,       // Don't refetch on mount if we have cached data
     retry: (failureCount, error) => {
       // Don't retry on auth errors
       if (error?.message?.includes('Authentication')) return false;
       return failureCount < 2;
     },
+    // Network-mode for better offline experience
+    networkMode: 'offlineFirst',
   });
 }
 
-// Sync bag mutation
+// Sync bag mutation with optimistic updates
 export function useSyncBag() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (bagItems: BagItem[]) => syncBagAction(bagItems),
-    onSuccess: (data, variables) => {
-      // Update the bag query cache with the new data
-      queryClient.setQueryData(['bag'], variables);
+    onMutate: async (newBagItems) => {
+      // Cancel outgoing refetches to avoid overriding optimistic update
+      await queryClient.cancelQueries({ queryKey: ['bag'] });
+
+      // Snapshot the previous value
+      const previousBag = queryClient.getQueryData(['bag']);
+
+      // Optimistically update to the new value
+      queryClient.setQueryData(['bag'], newBagItems);
+
+      // Return context for rollback
+      return { previousBag };
     },
-    onError: (error) => {
+    onError: (error, newBagItems, context) => {
+      // Rollback to previous value on error
+      if (context?.previousBag) {
+        queryClient.setQueryData(['bag'], context.previousBag);
+      }
       console.error('Bag sync failed:', error);
+    },
+    onSettled: () => {
+      // Always refetch after error or success to ensure server state
+      queryClient.invalidateQueries({ queryKey: ['bag'] });
     }
   });
 }

@@ -10,7 +10,15 @@ export interface BagItem {
   id: string
   quantity: number
   addedAt: string
-  [key: string]: unknown // Allow for full product properties
+  name: string
+  price: string | null
+  imageURL: string[] | null
+  isAvailable: boolean
+  categoryID: string
+  brandID: string | null
+  description: string | null
+  promoPrice: string | null
+  createdAt: Date
 }
 
 /**

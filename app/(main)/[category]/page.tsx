@@ -8,6 +8,9 @@ import { Loader2, AlertCircle } from "lucide-react";
 import { notFound } from "next/navigation";
 import type { Product } from "@/utils/models/products";
 import type { ProductWithRelations } from "@/lib/api-types";
+import AnimatedView from "@/components/animations/AnimatedView";
+import * as shoesLoader from "@/components/animations/shoes-loader/shoes-loader.json";
+
 
 // Helper function to transform ProductWithRelations to old Product format
 function transformProductForLegacyComponents(product: ProductWithRelations): Product {
@@ -40,7 +43,11 @@ const Page = ({ params }: { params: Promise<{ category: string }> }) => {
             <PageContainer>
                 <div className="min-h-[400px] flex items-center justify-center">
                     <div className="text-center">
-                        <Loader2 className="w-12 h-12 animate-spin mx-auto mb-4 text-purple-600" />
+                        <AnimatedView
+                            animationData={shoesLoader}
+                            height={128}
+                            width={128}
+                        />
                         <h2 className="text-xl font-semibold text-gray-700 mb-2">Loading {category}...</h2>
                         <p className="text-gray-500">Fetching the latest products for you</p>
                     </div>

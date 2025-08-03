@@ -14,6 +14,8 @@ type Json = string | number | boolean | null | { [key: string]: Json | undefined
 // Environment variables for n8n integration
 const N8N_WEBHOOK_URL = process.env.N8N_WEBHOOK_URL
 const N8N_API_KEY = process.env.N8N_API_KEY
+// Feature flag to disable n8n webhooks (now using messaging system instead)
+const N8N_WEBHOOKS_ENABLED = process.env.N8N_WEBHOOKS_ENABLED === 'true'
 
 interface N8nWebhookPayload {
   event_type: 'order_created' | 'order_status_changed'
@@ -32,8 +34,15 @@ interface N8nWebhookPayload {
 
 /**
  * Send webhook to n8n for WhatsApp notifications
+ * NOTE: Currently disabled by default since messaging system is used instead.
+ * To re-enable: set N8N_WEBHOOKS_ENABLED=true when client provides WhatsApp Business number.
  */
 async function sendN8nWebhook(payload: N8nWebhookPayload): Promise<void> {
+  if (!N8N_WEBHOOKS_ENABLED) {
+    console.log('N8N webhooks disabled, using messaging system instead')
+    return
+  }
+
   if (!N8N_WEBHOOK_URL) {
     console.log('N8N_WEBHOOK_URL not configured, skipping webhook')
     return
@@ -117,7 +126,8 @@ export async function createOrderAction(orderData: CreateOrderData) {
 
     await db.insert(orderItems).values(orderItemsData)
 
-    // Send n8n webhook for order creation
+    // Send n8n webhook for order creation (disabled by default, using messaging system)
+    // To re-enable: set N8N_WEBHOOKS_ENABLED=true when client provides WhatsApp Business number
     await sendN8nWebhook({
       event_type: 'order_created',
       order_id: newOrder.id,
@@ -257,7 +267,8 @@ export async function updateOrderStatusAction(orderId: string, status: string, n
       where: eq(profiles.id, updatedOrder.userId)
     })
 
-    // Send n8n webhook for status change
+    // Send n8n webhook for status change (disabled by default, using messaging system)
+    // To re-enable: set N8N_WEBHOOKS_ENABLED=true when client provides WhatsApp Business number
     if (orderWithDetails) {
       await sendN8nWebhook({
         event_type: 'order_status_changed',

@@ -21,7 +21,7 @@ export default function PageContainer({
   const bgClass = background === 'gray' ? 'bg-gray-50' : 'bg-white';
   
   return (
-    <div className={`${bgClass} flex-1 pt-0 flex xl:pt-24`}>
+    <div className={`bg-gray-50 dark:bg-slate-800 flex-1 pt-0 flex xl:pt-36`}>
       <div className="max-w-6xl flex-1 mx-auto px-4 py-6">
         {breadcrumbs && breadcrumbs.length > 0 && (
           <Breadcrumb items={breadcrumbs} />
