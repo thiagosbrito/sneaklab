@@ -37,8 +37,6 @@ export async function GET(
     if (filters.page! < 1) filters.page = 1;
     if (filters.limit! < 1 || filters.limit! > 100) filters.limit = 20;
 
-    console.log(`🔍 API: Fetching products for category: ${slug}`, filters);
-
     const result = await getProductsByCategory(slug, filters);
 
     // Check if category exists by looking at the query result
@@ -77,8 +75,6 @@ export async function GET(
       }
     );
   } catch (error) {
-    console.error('❌ API: Error fetching products for category:', error);
-
     return NextResponse.json(
       {
         success: false,

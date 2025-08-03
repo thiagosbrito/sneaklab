@@ -71,3 +71,4 @@ Thumbs.db
 # Drizzle migrations (if auto-generated)
 /drizzle/
 /docs/
+/reports/
